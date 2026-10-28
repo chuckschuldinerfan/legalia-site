@@ -370,26 +370,13 @@
     scrollTo({ top: sectionTop[a.dataset.nav](), behavior: reduceMotion.matches ? 'auto' : 'smooth' });
   }));
 
-  /* ---------- scrolling: smooth, with a stop at each page ---------- */
-  /* Scrolling stays free, but one scroll gesture never carries past the top of the black "Meist" or
-     the burgundy "Kontakt" (either direction): it comes to rest exactly there, and the next gesture
-     goes on. A gesture ends once the wheel or the finger has been quiet for a moment (trackpad and
-     phone momentum included). */
-  const root = document.documentElement;
-  const stops = () => { const a = $('main').offsetTop + $('.hero').offsetHeight; return [a, a + about.offsetHeight]; };
-  // The furthest a gesture that started at `from` may go towards `to`.
-  function limit(from, to) {
-    for (const s of to > from ? stops() : stops().reverse()) {
-      if (to > from && s > from + 1 && to > s) return s;
-      if (to < from && s < from - 1 && to < s) return s;
-    }
-    return to;
-  }
-
-  /* Mouse wheel and trackpad: they glide to their target instead of jumping. Touch screens use the
-     browser's own scrolling (below); keys, the scrollbar and menu links are left as they are. */
+  /* ---------- smooth scrolling ---------- */
+  /* Mouse wheel and trackpad scrolling glide to their target instead of jumping. Touch screens,
+     keyboard, scrollbar dragging and reduced-motion users keep the browser's own scrolling;
+     menu links use CSS scroll-behavior: smooth. */
   if (matchMedia('(hover: hover) and (pointer: fine)').matches) {
-    let target = scrollY, current = scrollY, last = 0, running = false, from = scrollY, quiet = 0;
+    const root = document.documentElement;
+    let target = scrollY, current = scrollY, last = 0, running = false;
     const maxScroll = () => root.scrollHeight - innerHeight;
 
     function frame(now) {
@@ -404,15 +391,12 @@
     }
 
     addEventListener('wheel', e => {
-      if (e.ctrlKey || e.shiftKey || e.defaultPrevented) return; // pinch-zoom, sideways
+      if (reduceMotion.matches || e.ctrlKey || e.shiftKey || e.defaultPrevented) return; // pinch-zoom, sideways
       if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) return; // sideways swipes stay native (card row)
       e.preventDefault();
       const unit = e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? innerHeight : 1;
       if (!running) { target = current = scrollY; }
-      if (performance.now() - quiet > 200) from = target; // a new gesture starts here
-      quiet = performance.now();
-      target = limit(from, Math.max(0, Math.min(maxScroll(), target + e.deltaY * unit)));
-      if (reduceMotion.matches) { scrollTo(0, target); current = target; return; }
+      target = Math.max(0, Math.min(maxScroll(), target + e.deltaY * unit));
       if (!running) {
         running = true; last = 0;
         root.style.scrollBehavior = 'auto'; // per-frame scrollTo must not be smoothed a second time
@@ -423,22 +407,6 @@
     // Any other scroll (keys, scrollbar, menu links) takes over; the glide stops there.
     addEventListener('scroll', () => {
       if (running && Math.abs(scrollY - current) > 2) { running = false; target = current = scrollY; root.style.scrollBehavior = ''; }
-    }, { passive: true });
-  }
-
-  /* Touch: the browser scrolls (with its momentum); if a swipe or its momentum crosses a stop, the
-     page is held there until the movement has died down. */
-  {
-    let from = null, held = null, quietTimer = 0, touching = false;
-    const settle = () => { clearTimeout(quietTimer); quietTimer = setTimeout(() => { if (!touching) { from = held = null; } }, 160); };
-    addEventListener('touchstart', () => { touching = true; clearTimeout(quietTimer); from = scrollY; held = null; }, { passive: true }); // each touch is a new gesture
-    addEventListener('touchend', () => { touching = false; settle(); }, { passive: true });
-    addEventListener('touchcancel', () => { touching = false; settle(); }, { passive: true });
-    addEventListener('scroll', () => {
-      if (from === null) return;
-      if (held === null) { const l = limit(from, scrollY); if (l !== scrollY) held = l; }
-      if (held !== null && Math.abs(scrollY - held) > 0.5) { root.style.scrollBehavior = 'auto'; scrollTo(0, held); root.style.scrollBehavior = ''; }
-      settle();
     }, { passive: true });
   }
 
