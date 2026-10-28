@@ -342,6 +342,7 @@
 
   const about = $('#meist');
   const contact = $('#kontakt');
+  const header = $('header');
   const navLinks = $$('[data-nav]');
   let ticking = false;
   function onScroll() {
@@ -349,6 +350,7 @@
     const mid = innerHeight * 0.5;
     const cur = contact.getBoundingClientRect().top < mid ? 'kontakt' : about.getBoundingClientRect().top < mid ? 'meist' : null;
     navLinks.forEach(a => (a.dataset.nav === cur ? a.setAttribute('aria-current', 'true') : a.removeAttribute('aria-current')));
+    header.classList.toggle('on-accent', contact.getBoundingClientRect().top < header.offsetHeight / 2);
     const aboutTop = about.getBoundingClientRect().top;
     if (aboutTop < innerHeight * 0.25) stopAll();
     if (aboutTop < innerHeight * 0.35) typer.start(); // starts as the text slides into view

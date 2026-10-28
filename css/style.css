@@ -8,6 +8,8 @@
   --mute:#a3a3a3;        /* secondary text on paper */
   --on-ink:#ededed;      /* text on ink */
   --on-ink-mute:#7d7d7d; /* secondary text on ink */
+  --accent:#6f2c3f;      /* Pantone 491 C: the contact page */
+  --on-accent-mute:#c5abb2; /* secondary text on the accent (60% white over it) */
   --sans:"Helvetica Neue",Helvetica,Arial,sans-serif;
   --gut:max(24px, env(safe-area-inset-left, 0px));
   --gut-r:max(24px, env(safe-area-inset-right, 0px));
@@ -43,6 +45,7 @@ h1,h2,p{margin:0;font:inherit}
 a{color:inherit;text-decoration:none}
 ::selection{background:var(--fg);color:var(--paper)}
 .ink ::selection{background:var(--on-ink);color:var(--ink)}
+.contact ::selection{color:var(--accent)}
 .sr-only{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip-path:inset(50%);white-space:nowrap;border:0}
 .grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));column-gap:var(--gap);padding-left:var(--gut);padding-right:var(--gut-r)}
 .small{font-size:var(--step--1);letter-spacing:.03em;text-transform:uppercase;line-height:1.45}
@@ -50,6 +53,10 @@ a{color:inherit;text-decoration:none}
 /* ---------- header: one layer that inverts against whatever passes under it ---------- */
 header{position:fixed;inset:0 0 auto;z-index:50;padding-top:calc(22px + env(safe-area-inset-top, 0px));color:#fff;mix-blend-mode:difference;align-items:center;pointer-events:none}
 header > *{pointer-events:auto}
+/* Over the burgundy contact page an inverted header would turn mint green, so there it is plain white. */
+header.on-accent{mix-blend-mode:normal}
+header.on-accent .menu a,header.on-accent .menu button{color:var(--on-accent-mute)}
+header.on-accent .menu a:hover,header.on-accent .menu button:hover,header.on-accent .menu a[aria-current="true"],header.on-accent .menu button[aria-pressed="true"]{color:#fff}
 .home{display:block;width:max-content}
 .logo{height:26px;width:auto;display:block;color:#fff}
 .menu{grid-column:5;display:flex;justify-content:space-between;gap:18px}
@@ -151,7 +158,7 @@ header > *{pointer-events:auto}
 @keyframes caret-blink{0%{opacity:1}50%{opacity:0}}
 
 /* ---------- contact: phone and email lead, address and map link below ---------- */
-.contact{z-index:2;min-height:var(--hero-h);display:flex;flex-direction:column;padding-block:110px calc(26px + env(safe-area-inset-bottom, 0px))}
+.contact{z-index:2;background:var(--accent);--on-ink-mute:var(--on-accent-mute);min-height:var(--hero-h);display:flex;flex-direction:column;padding-block:110px calc(26px + env(safe-area-inset-bottom, 0px))}
 .contact .grid{row-gap:28px}
 .reach{grid-column:1 / span 5;display:flex;flex-direction:column;gap:.04em;font-size:var(--step-5);line-height:1;letter-spacing:-.045em}
 .reach a{width:max-content;max-width:100%;overflow-wrap:anywhere;user-select:all;-webkit-user-select:all;transition:color .2s}
