@@ -370,44 +370,106 @@
     scrollTo({ top: sectionTop[a.dataset.nav](), behavior: reduceMotion.matches ? 'auto' : 'smooth' });
   }));
 
-  /* ---------- smooth scrolling ---------- */
-  /* Mouse wheel and trackpad scrolling glide to their target instead of jumping. Touch screens,
-     keyboard, scrollbar dragging and reduced-motion users keep the browser's own scrolling;
-     menu links use CSS scroll-behavior: smooth. */
-  if (matchMedia('(hover: hover) and (pointer: fine)').matches) {
+  /* ---------- page by page ---------- */
+  /* The page is three screens: the team, the black "Meist" and the burgundy "Kontakt". One wheel
+     gesture, swipe or key press moves exactly one screen, with a glide, so a quick flick can never
+     carry past "Meist". A screen taller than the window (very short windows) scrolls freely inside
+     before moving on. Reduced motion jumps instead of gliding. */
+  {
     const root = document.documentElement;
-    let target = scrollY, current = scrollY, last = 0, running = false;
-    const maxScroll = () => root.scrollHeight - innerHeight;
+    const hero = $('.hero');
+    // Each screen: where it is fully in view, and how far it can scroll beyond that.
+    const pages = () => {
+      const a = $('main').offsetTop, b = a + hero.offsetHeight, c = b + about.offsetHeight;
+      const max = root.scrollHeight - innerHeight;
+      return [[a, Math.min(b - innerHeight, max)], [b, Math.min(c - innerHeight, max)], [c, max]].map(([s, e]) => [s, Math.max(s, e)]);
+    };
+    const current = () => {
+      const y = scrollY, list = pages();
+      let i = 0;
+      list.forEach(([s], k) => { if (y >= s - 2) i = k; });
+      return { i, list, y };
+    };
+    let busy = false, quietTimer = 0, gestureDone = false, frame = 0;
 
-    function frame(now) {
-      if (!running) return;
-      const dt = Math.min(64, now - (last || now - 16.7));
-      last = now;
-      current += (target - current) * (1 - Math.pow(0.9, dt / 16.7)); // ~10% of the way per 60Hz frame
-      if (Math.abs(target - current) < 0.5) current = target;
-      scrollTo(0, current);
-      if (current !== target) requestAnimationFrame(frame);
-      else { running = false; root.style.scrollBehavior = ''; }
+    function glideTo(top) {
+      cancelAnimationFrame(frame);
+      if (reduceMotion.matches) { root.style.scrollBehavior = 'auto'; scrollTo(0, top); root.style.scrollBehavior = ''; return; }
+      const from = scrollY, dist = top - from, dur = 750, t0 = performance.now();
+      busy = true; root.style.scrollBehavior = 'auto';
+      const step = now => {
+        const t = Math.min(1, (now - t0) / dur), e = t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+        scrollTo(0, from + dist * e);
+        if (t < 1) frame = requestAnimationFrame(step);
+        else { busy = false; root.style.scrollBehavior = ''; }
+      };
+      frame = requestAnimationFrame(step);
+    }
+    // Move by dy: inside a tall screen scroll freely; at its edge, go to the next or previous screen.
+    // Returns true when it started a move to another screen.
+    function move(dy) {
+      const { i, list, y } = current();
+      const [s, e] = list[i];
+      if (dy > 0) {
+        if (y < e - 1) { scrollTo(0, Math.min(e, y + dy)); return false; }
+        if (i < list.length - 1) { glideTo(list[i + 1][0]); return true; }
+      } else {
+        if (y > s + 1) { scrollTo(0, Math.max(s, y + dy)); return false; }
+        if (i > 0) { glideTo(list[i - 1][1]); return true; }
+      }
+      return false;
     }
 
+    // Wheel and trackpad: one gesture (until the wheel has been quiet for a moment, inertia
+    // included) moves one screen.
     addEventListener('wheel', e => {
-      if (reduceMotion.matches || e.ctrlKey || e.shiftKey || e.defaultPrevented) return; // pinch-zoom, sideways
-      if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) return; // sideways swipes stay native (card row)
+      if (e.ctrlKey || Math.abs(e.deltaX) > Math.abs(e.deltaY) || e.defaultPrevented) return; // pinch-zoom, sideways card row
       e.preventDefault();
+      clearTimeout(quietTimer);
+      quietTimer = setTimeout(() => { gestureDone = false; }, 180);
+      if (busy || gestureDone) return;
       const unit = e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? innerHeight : 1;
-      if (!running) { target = current = scrollY; }
-      target = Math.max(0, Math.min(maxScroll(), target + e.deltaY * unit));
-      if (!running) {
-        running = true; last = 0;
-        root.style.scrollBehavior = 'auto'; // per-frame scrollTo must not be smoothed a second time
-        requestAnimationFrame(frame);
-      }
+      if (move(e.deltaY * unit)) gestureDone = true;
     }, { passive: false });
 
-    // Any other scroll (keys, scrollbar, menu links) takes over; the glide stops there.
-    addEventListener('scroll', () => {
-      if (running && Math.abs(scrollY - current) > 2) { running = false; target = current = scrollY; root.style.scrollBehavior = ''; }
+    // Touch: a vertical swipe of more than 40px moves one screen. Sideways swipes are left alone
+    // (card row and carousel).
+    let tx = 0, ty = 0, lastY = 0, axis = null;
+    addEventListener('touchstart', e => { const t = e.touches[0]; tx = t.clientX; ty = lastY = t.clientY; axis = null; }, { passive: true });
+    addEventListener('touchmove', e => {
+      if (e.touches.length > 1) return; // pinch-zoom
+      const t = e.touches[0];
+      if (!axis) axis = Math.abs(t.clientY - ty) > Math.abs(t.clientX - tx) ? 'y' : 'x';
+      if (axis !== 'y') return;
+      e.preventDefault();
+      const { i, list, y } = current();
+      const [s, end] = list[i];
+      // Inside a tall screen the finger scrolls it directly.
+      if (!busy && end > s) scrollTo(0, Math.min(end, Math.max(s, y + (lastY - t.clientY))));
+      lastY = t.clientY;
+    }, { passive: false });
+    addEventListener('touchend', e => {
+      if (axis !== 'y' || busy) return;
+      const dy = ty - e.changedTouches[0].clientY;
+      if (Math.abs(dy) < 40) return;
+      const { i, list, y } = current();
+      const [s, end] = list[i];
+      if (dy > 0 && y >= end - 1 && i < list.length - 1) glideTo(list[i + 1][0]);
+      if (dy < 0 && y <= s + 1 && i > 0) glideTo(list[i - 1][1]);
     }, { passive: true });
+
+    // Keys: Page Down / Space / arrows move one screen (unless typing or on a control that uses them).
+    addEventListener('keydown', e => {
+      if (e.defaultPrevented || e.altKey || e.ctrlKey || e.metaKey || /INPUT|TEXTAREA|SELECT/.test(e.target.tagName)) return;
+      if (e.key === ' ' && e.target.closest('button, a')) return; // Space presses buttons
+      const down = ['PageDown', 'ArrowDown'].includes(e.key) || (e.key === ' ' && !e.shiftKey);
+      const up = ['PageUp', 'ArrowUp'].includes(e.key) || (e.key === ' ' && e.shiftKey);
+      if (e.key === 'Home') { e.preventDefault(); glideTo(0); return; }
+      if (e.key === 'End') { e.preventDefault(); glideTo(root.scrollHeight - innerHeight); return; }
+      if (!down && !up) return;
+      e.preventDefault();
+      if (!busy) move((down ? 1 : -1) * innerHeight * .9);
+    });
   }
 
   /* ---------- language switch ---------- */
