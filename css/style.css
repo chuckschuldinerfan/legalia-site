@@ -1,0 +1,176 @@
+/* Legalia
+   Layout: one 5-column grid, set by the five team cards, carries the header, the cards and the dark sections. */
+:root{
+  --paper:#f9f9f9;       /* hero ground */
+  --card:#ffffff;        /* business cards */
+  --ink:#121212;         /* dark sections that slide over the hero */
+  --fg:#111111;          /* text on paper */
+  --mute:#a3a3a3;        /* secondary text on paper */
+  --on-ink:#ededed;      /* text on ink */
+  --on-ink-mute:#7d7d7d; /* secondary text on ink */
+  --sans:"Helvetica Neue",Helvetica,Arial,sans-serif;
+  --gut:max(24px, env(safe-area-inset-left, 0px));
+  --gut-r:max(24px, env(safe-area-inset-right, 0px));
+  --gap:12px;
+
+  /* Type scale. One fluid modular scale: at a 360px screen it is 13px x 1.25 per step, at 1920px
+     it is 16px x 1.5 per step, and in between every step grows in a straight line with the width.
+     Every text on the page uses a step; nothing is sized ad hoc. */
+  --step--1:11px;                                            /* labels, menu, footer (10.4-10.7, rounded) */
+  --step-0:clamp(13px, 12.31px + .192vw, 16px);              /* body */
+  --step-2:clamp(20.31px, 16.69px + 1.006vw, 36px);          /* address */
+  --step-3:clamp(25.39px, 18.79px + 1.834vw, 54px);          /* about text, map link */
+  --step-5:clamp(39.67px, 20.79px + 5.246vw, 121.5px);       /* phone and email */
+  /* The business cards are objects with their own proportions: their text scales with the card
+     width rather than the page, between 10 and 13px (12px in the sideways row). */
+  --card-text:clamp(10px, .8vw, 13px);
+  --screen:100vh;
+  --hero-min:620px;
+  --ease:cubic-bezier(.2,.75,.2,1);
+  color-scheme:light;
+}
+/* Small viewport height: on phones the first screen is measured with the browser bars showing. */
+@supports (height:100svh){ :root{ --screen:100svh } }
+:root{ --hero-h:max(var(--screen), var(--hero-min)) }
+
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%;text-size-adjust:100%}
+body{margin:0;overflow-x:clip;background:var(--paper);color:var(--fg);font-family:var(--sans);-webkit-font-smoothing:antialiased;font-size:var(--step-0);line-height:1.45}
+h1,h2,p{margin:0;font:inherit}
+a{color:inherit;text-decoration:none}
+::selection{background:var(--fg);color:var(--paper)}
+.ink ::selection{background:var(--on-ink);color:var(--ink)}
+.sr-only{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip-path:inset(50%);white-space:nowrap;border:0}
+.grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));column-gap:var(--gap);padding-left:var(--gut);padding-right:var(--gut-r)}
+.small{font-size:var(--step--1);letter-spacing:.03em;text-transform:uppercase;line-height:1.45}
+
+/* ---------- header: one layer that inverts against whatever passes under it ---------- */
+header{position:fixed;inset:0 0 auto;z-index:50;padding-top:calc(22px + env(safe-area-inset-top, 0px));color:#fff;mix-blend-mode:difference;align-items:center;pointer-events:none}
+header > *{pointer-events:auto}
+.home{display:block;width:max-content}
+.logo{height:26px;width:auto;display:block;color:#fff}
+.menu{grid-column:5;display:flex;justify-content:space-between;gap:18px}
+.menu div{display:flex;gap:14px}
+.menu a,.menu button{all:unset;cursor:pointer;color:#9a9a9a;transition:color .2s;-webkit-tap-highlight-color:transparent}
+.menu a:hover,.menu button:hover{color:#d4d4d4}
+.menu a[aria-current="true"],.menu button[aria-pressed="true"]{color:#fff}
+.home:focus-visible,.menu a:focus-visible,.menu button:focus-visible{outline:1px solid #fff;outline-offset:3px}
+
+/* ---------- hero: stays pinned while the dark sections slide up over it ---------- */
+/* When the window is shorter than the hero, the negative top lets it scroll until the cards
+   reach the bottom edge, and only then pins it. */
+.hero{position:sticky;top:min(0px, calc(var(--screen) - var(--hero-h)));z-index:0;height:var(--hero-h);background:var(--paper)}
+.cards{position:absolute;left:0;right:0;bottom:0;margin:0;list-style:none;align-items:end}
+.card{position:relative;aspect-ratio:55/85;max-height:calc(var(--hero-h) - 110px);perspective:1600px;font-size:var(--card-text);line-height:1.45;letter-spacing:.01em}
+/* The whole card is one button; the faces below it are only pictures of the card. */
+.flip{position:absolute;inset:0;z-index:2;transform:translateZ(0);width:100%;margin:0;padding:0;border:0;background:none;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.flip:focus{outline:none}
+/* Two layers, so the two motions never fight:
+   .inner  - the small tilt that follows the mouse (--rx/--ry, set in main.js)
+   .turn   - the flip, one continuous 180deg turn.
+   No preserve-3d and no backface-visibility: Safari and Firefox mishandle both when a face holds a
+   video or a blended photo. Instead each face is shown or hidden by the same animation that turns
+   the card, at the exact moment it is edge-on (90deg), and the back is mirrored in 2D so it reads
+   the right way round once turned. */
+.card{--rx:0deg;--ry:0deg}
+.inner{position:absolute;inset:0;perspective:1600px;transition:transform .8s var(--ease)}
+.card.tracking .inner{transition:transform .35s var(--ease)}
+.turn{position:absolute;inset:0}
+.card.flipped .turn{transform:rotateY(180deg)}
+.back{transform:scaleX(-1)}
+/* Same timing as before: quick start, long settle. The first quarter of the time covers the first
+   90deg at constant speed, the rest eases out from that same speed, so the motion is one piece. */
+.card.to-back .turn{animation:turn-to-back .8s both}
+.card.to-front .turn{animation:turn-to-front .8s both}
+.card.to-back .front,.card.to-front .back{animation:face-out .8s both}
+.card.to-back .back,.card.to-front .front{animation:face-in .8s both}
+@keyframes turn-to-back{0%{transform:rotateY(0deg);animation-timing-function:linear}25%{transform:rotateY(90deg);animation-timing-function:cubic-bezier(.1,.3,.25,1)}100%{transform:rotateY(180deg)}}
+@keyframes turn-to-front{0%{transform:rotateY(180deg);animation-timing-function:linear}25%{transform:rotateY(90deg);animation-timing-function:cubic-bezier(.1,.3,.25,1)}100%{transform:rotateY(0deg)}}
+@keyframes face-out{0%,24.9%{visibility:visible}25%,100%{visibility:hidden}}
+@keyframes face-in{0%,24.9%{visibility:hidden}25%,100%{visibility:visible}}
+.face{position:absolute;inset:0;overflow:hidden;background:var(--card);box-shadow:0 1px 2px rgba(0,0,0,.04),0 10px 26px -12px rgba(0,0,0,.14);transition:box-shadow .5s}
+.card.flipped .front,.card:not(.flipped) .back{visibility:hidden}
+.who{position:absolute;top:1.9em;left:1.9em;right:1.9em}
+.g,.who .g{color:var(--mute)}
+.hint{position:absolute;top:0;right:0;white-space:nowrap;color:var(--mute);opacity:0;transform:translateY(-3px);transition:opacity .35s,transform .35s}
+/* Photo and video share one box at the bottom; the video only shows while it is actually playing. */
+/* No blend mode: on the pure white card multiply changed nothing, and Firefox freezes blended video. */
+.front img,.front video{position:absolute;left:0;bottom:0;width:100%;height:auto;aspect-ratio:7/8;display:block}
+.front video{opacity:0}
+.card.is-playing .front video{opacity:1}
+.card.is-playing .front img{visibility:hidden}
+.card.flipped .front video,.front video[hidden]{display:none}
+.bio{position:absolute;top:1.9em;left:1.9em;right:1.9em}
+.bio .lead{margin-top:4.6em}
+.bio p+p{margin-top:1.2em}
+/* Set by main.js only on cards whose text would not fit otherwise (longer EN/RU bios, narrow cards). */
+.cards.hint-low .hint{top:1.45em}
+.card.tight .bio .lead{margin-top:2.8em}
+.card.tight .bio p+p{margin-top:.9em}
+.mail{position:absolute;left:1.9em;right:1.9em;bottom:1.9em;display:flex;justify-content:space-between;align-items:flex-end;gap:1em}
+@media (hover:hover){
+  .card:hover .inner{transform:rotateY(var(--ry)) rotateX(var(--rx)) translateY(-8px)}
+  .card:hover .face{box-shadow:0 2px 4px rgba(0,0,0,.05),0 34px 50px -22px rgba(0,0,0,.3)}
+  .card:hover .hint{opacity:1;transform:none}
+}
+.flip:focus-visible + .inner .face{box-shadow:0 0 0 1px var(--fg),0 10px 26px -12px rgba(0,0,0,.2)}
+.flip:focus-visible + .inner .hint{opacity:1;transform:none}
+
+/* ---------- dark sections: normal flow, stacked above the pinned hero ---------- */
+.ink{position:relative;z-index:1;background:var(--ink);color:var(--on-ink)}
+.label{color:var(--on-ink-mute)}
+/* Pins like the hero: it stops at the top edge, holds one full screen, and Kontakt slides over it. */
+.about-sec{position:sticky;top:0;z-index:1;height:var(--screen);overflow:hidden;display:flex;flex-direction:column;justify-content:center;padding-block:110px 80px}
+.about-sec .grid{row-gap:28px}
+/* Step 3 of the scale; main.js steps it down only if the section would not fit one screen (small phones, long translations). */
+.about{grid-column:1 / span 5;font-size:var(--step-3);line-height:1.12;letter-spacing:-.02em;max-width:24em;text-wrap:pretty}
+
+/* ---------- contact: phone and email lead, address and map link below ---------- */
+.contact{z-index:2;min-height:var(--hero-h);display:flex;flex-direction:column;padding-block:110px calc(26px + env(safe-area-inset-bottom, 0px))}
+.contact .grid{row-gap:28px}
+.reach{grid-column:1 / span 5;display:flex;flex-direction:column;gap:.04em;font-size:var(--step-5);line-height:1;letter-spacing:-.045em}
+.reach a{width:max-content;max-width:100%;overflow-wrap:anywhere;user-select:all;-webkit-user-select:all;transition:color .2s}
+.reach a:hover{color:#fff}
+.reach a:focus-visible{outline:1px solid var(--on-ink);outline-offset:6px}
+.place{margin-top:auto;padding-top:80px;align-items:end;row-gap:28px}
+.addr{grid-column:1 / span 2;font-size:var(--step-2);line-height:1.2;letter-spacing:-.015em;color:var(--on-ink)}
+.find{grid-column:4 / span 2;justify-self:end;display:inline-flex;align-items:center;gap:.4em;font-size:var(--step-3);line-height:1;letter-spacing:-.025em;color:#fff}
+/* Icons are SVG files in assets/icons (never text symbols, which iOS can turn into emoji). */
+.find .pin{width:.9em;height:.9em;flex:none}
+.find .arrow{flex:none;width:.8em;height:.8em;margin-left:.1em;transition:transform .3s var(--ease)}
+.find:hover .arrow{transform:translate(.15em,-.15em)}
+.find:focus-visible{outline:1px solid var(--on-ink);outline-offset:6px}
+.foot{margin-top:56px;color:var(--on-ink-mute)}
+.foot p{grid-column:1 / -1;display:flex;align-items:center;gap:.25em}
+.foot .copy{width:1.05em;height:1.05em;flex:none}
+
+/* ---------- up to 1279px: five cards in a row get too narrow for the bios, so they scroll sideways ---------- */
+/* A card is never narrower than 250px (the longest bio fits at that width); otherwise it is as tall as the screen allows. */
+@media (max-width:1279px){
+  :root{--card-min:250px;--card-text:12px}
+  html[lang=en]{--card-min:270px}
+  html[lang=ru]{--card-min:290px}
+  .cards{display:flex;gap:var(--gap);overflow-x:auto;overscroll-behavior-x:contain;scroll-snap-type:x mandatory;scroll-padding-inline:var(--gut) var(--gut-r);scrollbar-width:none}
+  .cards::-webkit-scrollbar{display:none}
+  .card{flex:0 0 max(var(--card-min), min(clamp(var(--card-min),64vw,300px), calc((min(var(--hero-h), var(--screen)) - 110px) * 55 / 85)));scroll-snap-align:start;max-height:none}
+}
+/* tablet: the menu needs a little more than one card's width, so it takes the last two columns */
+@media (max-width:1279px) and (min-width:761px){
+  .menu{grid-column:4 / span 2}
+}
+
+/* ---------- phones: narrower margins, the menu stacks under itself on the right ---------- */
+@media (max-width:760px){
+  :root{--gut:max(16px, env(safe-area-inset-left, 0px));--gut-r:max(16px, env(safe-area-inset-right, 0px));--hero-min:560px}
+  header.grid{grid-template-columns:1fr auto}
+  .menu{grid-column:2;flex-direction:column;align-items:flex-end;gap:4px}
+  .logo{height:22px}
+  .addr,.find{grid-column:1 / -1;justify-self:start}
+}
+
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  .inner,.face,.hint,.find .arrow{transition:none}
+  .card:hover .inner{transform:none}
+  .card.to-back .turn,.card.to-front .turn,.card.to-back .face,.card.to-front .face{animation:none}
+}
