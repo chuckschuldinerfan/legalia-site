@@ -75,6 +75,91 @@
   });
 
   // Each face has its own flip button; its label names the person so it makes sense out of context.
+  /* ---------- phones: endless one-card carousel (like legalia.ee, without arrows) ---------- */
+  /* Every card sits at --x = its distance from the center, wrapped so the row loops both ways:
+     left of the first card comes the last one. A horizontal swipe moves exactly one card; a
+     vertical swipe is left to the browser (touch-action: pan-y) and scrolls the page. */
+  const phone = matchMedia('(max-width: 760px)');
+  const carousel = (() => {
+    const cards = $$('.card', list), n = cards.length;
+    let pos = 0, anim = 0, active = -1;
+    const pitch = () => cards[0].offsetWidth + 12;                              // card width + gap
+    const wrap = d => ((((d + n / 2) % n) + n) % n) - n / 2;                     // into [-n/2, n/2)
+    const index = () => ((Math.round(pos) % n) + n) % n;
+    function render() {
+      if (!phone.matches) return;
+      const w = pitch();
+      cards.forEach((c, i) => c.style.setProperty('--x', `${(wrap(i - pos) * w).toFixed(2)}px`));
+    }
+    function settle() {
+      const k = index();
+      if (k === active) return;
+      active = k;
+      cards.forEach((c, i) => (i === k ? c.autoPlay() : c.autoStop()));
+    }
+    function animateTo(target) {
+      cancelAnimationFrame(anim);
+      const from = pos, t0 = performance.now(), dur = reduceMotion.matches ? 0 : 380;
+      const tick = now => {
+        const p = dur ? Math.min(1, (now - t0) / dur) : 1;
+        pos = from + (target - from) * (1 - Math.pow(1 - p, 3));                // ease-out
+        render();
+        if (p < 1) anim = requestAnimationFrame(tick); else { pos = target; render(); settle(); }
+      };
+      anim = requestAnimationFrame(tick);
+    }
+
+    let drag = null, dragged = false, vx = 0, last = null;
+    list.addEventListener('pointerdown', e => {
+      if (!phone.matches || e.button > 0) return;
+      cancelAnimationFrame(anim);
+      drag = { x: e.clientX, y: e.clientY, pos, id: e.pointerId, axis: null };
+      last = { x: e.clientX, t: e.timeStamp }; vx = 0; dragged = false;
+    });
+    list.addEventListener('pointermove', e => {
+      if (!drag || e.pointerId !== drag.id) return;
+      const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+      if (!drag.axis) {
+        if (Math.abs(dx) > 8 && Math.abs(dx) > Math.abs(dy)) { drag.axis = 'x'; list.setPointerCapture(e.pointerId); list.classList.add('dragging'); }
+        else if (Math.abs(dy) > 8) { drag = null; animateTo(Math.round(pos)); return; } // vertical: the page scrolls
+        else return;
+      }
+      dragged = true;
+      const dt = e.timeStamp - last.t;
+      if (dt > 0) vx = (e.clientX - last.x) / dt;
+      last = { x: e.clientX, t: e.timeStamp };
+      pos = drag.pos - dx / pitch();
+      render();
+    });
+    const release = e => {
+      if (!drag || e.pointerId !== drag.id) return;
+      const d = drag; drag = null;
+      list.classList.remove('dragging');
+      const base = Math.round(d.pos);
+      if (d.axis !== 'x') { animateTo(base); return; }
+      const dx = e.clientX - d.x, w = pitch();
+      // one card per swipe: far enough or fast enough moves to the neighbour
+      const target = dx < -w * 0.15 || vx < -0.3 ? base + 1 : dx > w * 0.15 || vx > 0.3 ? base - 1 : base;
+      animateTo(target);
+    };
+    list.addEventListener('pointerup', release);
+    list.addEventListener('pointercancel', release);
+    // A swipe is not a tap: swallow the click that follows a drag, so it never flips a card.
+    list.addEventListener('click', e => { if (dragged) { e.preventDefault(); e.stopPropagation(); dragged = false; } }, true);
+    // Keyboard and screen-reader focus brings its card to the center.
+    list.addEventListener('focusin', e => {
+      if (!phone.matches) return;
+      const i = cards.indexOf(e.target.closest('.card'));
+      if (i >= 0) animateTo(Math.round(pos + wrap(i - pos)));
+    });
+    phone.addEventListener('change', () => {
+      if (phone.matches) { render(); settle(); return; }
+      cards.forEach(c => { c.style.removeProperty('--x'); c.autoStop(); });
+      active = -1;
+    });
+    return { render, start() { if (phone.matches) { render(); settle(); } } };
+  })();
+
   function labelCard(card) {
     const name = text(`team.${card.dataset.id}.name`).value;
     $('.front .flip', card).setAttribute('aria-label', `${text('card.flip').value}: ${name}`);
@@ -89,10 +174,11 @@
     const frontBtn = $('.flip', front), backBtn = $('.flip', back);
     let hovering = false;
     let playedThisHover = false; // the clip runs once per hover, then rests on its last frame
+    let auto = false;            // phones: the carousel asks the centered card to play
 
     // Photo side fully facing the viewer: not flipped and not in the middle of a turn.
     const facesViewer = () => !card.classList.contains('flipped') && !card.classList.contains('flipping');
-    const shouldPlay = () => hovering && facesViewer() && !reduceMotion.matches && !document.hidden;
+    const shouldPlay = () => (hovering || auto) && facesViewer() && !reduceMotion.matches && !document.hidden;
 
     // Seek only when not already at the start: Firefox stalls ("waiting" forever) on a
     // redundant seek to 0 right before play(), so every hover after the first froze there.
@@ -115,6 +201,9 @@
       if (shouldPlay()) card.classList.add('is-playing'); else stop();
     });
     card.stopVideo = stop;
+    // Phones have no hover: the carousel plays the clip once when this card arrives in the center.
+    card.autoPlay = () => { auto = true; playedThisHover = false; play(); };
+    card.autoStop = () => { auto = false; if (!video.hidden) stop(); };
 
     // One continuous turn, run by CSS animations (see .to-back / .to-front in style.css).
     let busy = false;
@@ -197,7 +286,7 @@
     let size = parseFloat(getComputedStyle(text).fontSize);
     while (inner.offsetHeight > room && size > 14) { size -= 0.5; text.style.fontSize = `${size}px`; }
   }
-  const fitAll = () => { fitCards(); fitAbout(); };
+  const fitAll = () => { fitCards(); fitAbout(); carousel.render(); };
 
   /* ---------- "Meist" text types itself out the first time it comes into view ---------- */
   /* Quick on purpose (about 1.2s for the whole paragraph). Screen readers get the full text
@@ -326,6 +415,7 @@
   applyLanguage(saved || 'et');
 
   $('#year').textContent = new Date().getFullYear();
+  carousel.start(); // phones: centre the first card and play its clip
   onScroll();
 
   // Report what is still missing, for whoever pastes the official texts in.
