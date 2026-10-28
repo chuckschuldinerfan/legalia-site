@@ -6,9 +6,9 @@
 <title>Legalia Advokaadibüroo</title>
 <meta name="theme-color" content="#f9f9f9">
 <link rel="icon" href="assets/logo.svg" type="image/svg+xml">
-<link rel="stylesheet" href="css/style.css?v=20261028f">
-<script src="js/i18n.js?v=20261028f" defer></script>
-<script src="js/main.js?v=20261028f" defer></script>
+<link rel="stylesheet" href="css/style.css?v=v2-3">
+<script src="js/i18n.js?v=v2-3" defer></script>
+<script src="js/main.js?v=v2-3" defer></script>
 </head>
 <body>
 <!-- All texts live in js/i18n.js. Elements here only carry their key (data-i18n for text, data-i18n-label for aria-label). -->
@@ -59,11 +59,11 @@
 <!-- One business card; js/main.js clones it per team member and fills the data-k fields. -->
 <template id="card-tpl">
   <li class="card">
-    <button class="flip" type="button" aria-expanded="false"></button>
-    <div class="inner"><!-- tilt that follows the mouse -->
+    <div class="inner"><!-- lifts a little on hover -->
       <div class="turn"><!-- the flip -->
-      <div class="face front" aria-hidden="true"><!-- the button label already reads name, title and hint -->
-        <p class="who"><span data-k="name"></span><span class="hint" data-i18n="card.flip"></span><br><span class="g" data-k="title"></span></p>
+      <div class="face front">
+        <p class="who"><span data-k="name"></span><br><span class="g" data-k="title"></span></p>
+        <button class="flip" type="button" aria-expanded="false"><span data-i18n="card.flip"></span><img src="assets/icons/flip-arrow.svg" alt="" width="24" height="24"></button>
         <picture><source type="image/webp"><img alt="" width="700" height="800" decoding="async"></picture>
         <video muted playsinline disablepictureinpicture preload="none" aria-hidden="true" tabindex="-1"></video>
       </div>
@@ -74,6 +74,7 @@
           <p class="g" data-k="cred"></p>
           <p class="g" data-k="lang"></p>
         </div>
+        <button class="flip" type="button" aria-expanded="true"><span data-i18n="card.back"></span><img src="assets/icons/flip-arrow.svg" alt="" width="24" height="24"></button>
         <p class="mail"><span data-k="email"></span></p>
       </div>
       </div>

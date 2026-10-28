@@ -12,6 +12,9 @@
   --gut:max(24px, env(safe-area-inset-left, 0px));
   --gut-r:max(24px, env(safe-area-inset-right, 0px));
   --gap:12px;
+  /* The cards stand off the bottom edge by the same margin as the sides (24px, 16px on phones),
+     so the row is framed evenly on three sides. */
+  --lift:var(--gut);
 
   /* Type scale. One fluid modular scale: at a 360px screen it is 13px x 1.25 per step, at 1920px
      it is 16px x 1.5 per step, and in between every step grows in a straight line with the width.
@@ -60,26 +63,21 @@ header > *{pointer-events:auto}
 /* When the window is shorter than the hero, the negative top lets it scroll until the cards
    reach the bottom edge, and only then pins it. */
 .hero{position:sticky;top:min(0px, calc(var(--screen) - var(--hero-h)));z-index:0;height:var(--hero-h);background:var(--paper)}
-.cards{position:absolute;left:0;right:0;bottom:0;margin:0;list-style:none;align-items:end}
-.card{position:relative;aspect-ratio:55/85;max-height:calc(var(--hero-h) - 110px);perspective:1600px;font-size:var(--card-text);line-height:1.45;letter-spacing:.01em}
-/* The whole card is one button; the faces below it are only pictures of the card. */
-.flip{position:absolute;inset:0;z-index:2;transform:translateZ(0);width:100%;margin:0;padding:0;border:0;background:none;cursor:pointer;-webkit-tap-highlight-color:transparent}
-.flip:focus{outline:none}
+.cards{position:absolute;left:0;right:0;bottom:var(--lift);margin:0;list-style:none;align-items:end}
+.card{position:relative;aspect-ratio:55/85;max-height:calc(var(--hero-h) - 110px - var(--lift));font-size:var(--card-text);line-height:1.45;letter-spacing:.01em}
 /* Two layers, so the two motions never fight:
-   .inner  - the small tilt that follows the mouse (--rx/--ry, set in main.js)
+   .inner  - lifts the card a little on hover
    .turn   - the flip, one continuous 180deg turn.
    No preserve-3d and no backface-visibility: Safari and Firefox mishandle both when a face holds a
-   video or a blended photo. Instead each face is shown or hidden by the same animation that turns
+   video or a photo layer. Instead each face is shown or hidden by the same animation that turns
    the card, at the exact moment it is edge-on (90deg), and the back is mirrored in 2D so it reads
    the right way round once turned. */
-.card{--rx:0deg;--ry:0deg}
-.inner{position:absolute;inset:0;perspective:1600px;transition:transform .8s var(--ease)}
-.card.tracking .inner{transition:transform .35s var(--ease)}
+.inner{position:absolute;inset:0;perspective:1600px;transition:transform .5s var(--ease)}
 .turn{position:absolute;inset:0}
 .card.flipped .turn{transform:rotateY(180deg)}
 .back{transform:scaleX(-1)}
-/* Same timing as before: quick start, long settle. The first quarter of the time covers the first
-   90deg at constant speed, the rest eases out from that same speed, so the motion is one piece. */
+/* Quick start, long settle: the first quarter of the time covers the first 90deg at constant
+   speed, the rest eases out from that same speed, so the motion is one piece. */
 .card.to-back .turn{animation:turn-to-back .8s both}
 .card.to-front .turn{animation:turn-to-front .8s both}
 .card.to-back .front,.card.to-front .back{animation:face-out .8s both}
@@ -92,29 +90,42 @@ header > *{pointer-events:auto}
 .card.flipped .front,.card:not(.flipped) .back{visibility:hidden}
 .who{position:absolute;top:1.9em;left:1.9em;right:1.9em}
 .g,.who .g{color:var(--mute)}
-.hint{position:absolute;top:0;right:0;white-space:nowrap;color:var(--mute);opacity:0;transform:translateY(-3px);transition:opacity .35s,transform .35s}
 /* Photo and video share one box at the bottom; the video only shows while it is actually playing. */
-/* No blend mode: on the pure white card multiply changed nothing, and Firefox freezes blended video. */
-.front img,.front video{position:absolute;left:0;bottom:0;width:100%;height:auto;aspect-ratio:7/8;display:block}
+.front picture img,.front video{position:absolute;left:0;bottom:0;width:100%;height:auto;aspect-ratio:7/8;display:block}
 .front video{opacity:0}
 .card.is-playing .front video{opacity:1}
-.card.is-playing .front img{visibility:hidden}
+.card.is-playing .front picture img{visibility:hidden}
 .card.flipped .front video,.front video[hidden]{display:none}
 .bio{position:absolute;top:1.9em;left:1.9em;right:1.9em}
 .bio .lead{margin-top:4.6em}
 .bio p+p{margin-top:1.2em}
-/* Set by main.js only on cards whose text would not fit otherwise (longer EN/RU bios, narrow cards). */
-.cards.hint-low .hint{top:1.45em}
+/* Flip control: a small text button on the name line, gray at rest, black on hover and press.
+   The padding (cancelled by the negative margin) makes the tap area larger than the text. */
+.flip{position:absolute;top:1.9em;right:1.9em;z-index:1;display:inline-flex;align-items:center;gap:.45em;margin:-.6em;padding:.6em;border:0;background:none;font:inherit;line-height:inherit;letter-spacing:inherit;color:var(--mute);white-space:nowrap;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:color .2s}
+.flip img{width:1em;height:1em;flex:none;opacity:.38;transition:opacity .2s,transform .3s var(--ease)}
+.back .flip img{transform:scaleX(-1)}
+.flip:hover,.flip:active,.flip:focus-visible{color:var(--fg)}
+.flip:hover img,.flip:active img,.flip:focus-visible img{opacity:1}
+.front .flip:hover img{transform:translateX(.15em)}
+.back .flip:hover img{transform:scaleX(-1) translateX(.15em)}
+.flip:focus{outline:none}
+.flip:focus-visible{outline:1px solid var(--fg);outline-offset:-.2em}
+/* With a mouse, the button only appears while the card is hovered (or reached with the keyboard).
+   Touch screens have no hover, so there it always shows. */
+@media (hover:hover){
+  .flip{opacity:0;transition:color .2s,opacity .3s}
+  .card:hover .flip,.flip:focus-visible{opacity:1}
+}
+/* Set by main.js only where needed: the flip buttons drop to their own line under the title when a name is too long,
+   and bios that would run into the email lose some spacing first. */
+.cards.flip-low .flip{top:calc(1.9em + 2.9em + .9em)}
 .card.tight .bio .lead{margin-top:2.8em}
 .card.tight .bio p+p{margin-top:.9em}
-.mail{position:absolute;left:1.9em;right:1.9em;bottom:1.9em;display:flex;justify-content:space-between;align-items:flex-end;gap:1em}
+.mail{position:absolute;left:1.9em;right:1.9em;bottom:1.9em}
 @media (hover:hover){
-  .card:hover .inner{transform:rotateY(var(--ry)) rotateX(var(--rx)) translateY(-8px)}
+  .card:hover .inner{transform:translateY(-8px)}
   .card:hover .face{box-shadow:0 2px 4px rgba(0,0,0,.05),0 34px 50px -22px rgba(0,0,0,.3)}
-  .card:hover .hint{opacity:1;transform:none}
 }
-.flip:focus-visible + .inner .face{box-shadow:0 0 0 1px var(--fg),0 10px 26px -12px rgba(0,0,0,.2)}
-.flip:focus-visible + .inner .hint{opacity:1;transform:none}
 
 /* ---------- dark sections: normal flow, stacked above the pinned hero ---------- */
 .ink{position:relative;z-index:1;background:var(--ink);color:var(--on-ink)}
@@ -124,6 +135,15 @@ header > *{pointer-events:auto}
 .about-sec .grid{row-gap:28px}
 /* Step 3 of the scale; main.js steps it down only if the section would not fit one screen (small phones, long translations). */
 .about{grid-column:1 / span 5;font-size:var(--step-3);line-height:1.12;letter-spacing:-.02em;max-width:24em;text-wrap:pretty}
+/* Typing reveal (main.js), the first time the section comes into view. The untyped rest of the text
+   is already laid out but invisible, so lines never re-wrap while it types. The caret is a
+   zero-width inline, which adds no break opportunity. */
+.about .rest{visibility:hidden}
+.about .caret{position:relative}
+.about .caret::after{content:"";position:absolute;left:.03em;top:.1em;width:.055em;height:.95em;background:currentColor}
+/* Once typed, the caret stays at the end and blinks, like a text box that is still selected. */
+.about .caret.blink::after{animation:caret-blink 1.06s steps(1) infinite}
+@keyframes caret-blink{0%{opacity:1}50%{opacity:0}}
 
 /* ---------- contact: phone and email lead, address and map link below ---------- */
 .contact{z-index:2;min-height:var(--hero-h);display:flex;flex-direction:column;padding-block:110px calc(26px + env(safe-area-inset-bottom, 0px))}
@@ -152,7 +172,7 @@ header > *{pointer-events:auto}
   html[lang=ru]{--card-min:290px}
   .cards{display:flex;gap:var(--gap);overflow-x:auto;overscroll-behavior-x:contain;scroll-snap-type:x mandatory;scroll-padding-inline:var(--gut) var(--gut-r);scrollbar-width:none}
   .cards::-webkit-scrollbar{display:none}
-  .card{flex:0 0 max(var(--card-min), min(clamp(var(--card-min),64vw,300px), calc((min(var(--hero-h), var(--screen)) - 110px) * 55 / 85)));scroll-snap-align:start;max-height:none}
+  .card{flex:0 0 max(var(--card-min), min(clamp(var(--card-min),64vw,300px), calc((min(var(--hero-h), var(--screen)) - 110px - var(--lift)) * 55 / 85)));scroll-snap-align:start;max-height:none}
 }
 /* tablet: the menu needs a little more than one card's width, so it takes the last two columns */
 @media (max-width:1279px) and (min-width:761px){
@@ -170,7 +190,7 @@ header > *{pointer-events:auto}
 
 @media (prefers-reduced-motion:reduce){
   html{scroll-behavior:auto}
-  .inner,.face,.hint,.find .arrow{transition:none}
+  .inner,.face,.flip,.flip img,.find .arrow{transition:none}
   .card:hover .inner{transform:none}
   .card.to-back .turn,.card.to-front .turn,.card.to-back .face,.card.to-front .face{animation:none}
 }

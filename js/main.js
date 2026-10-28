@@ -41,6 +41,7 @@
     $$('[data-i18n]').forEach(el => put(el, el.dataset.i18n));
     $$('[data-i18n-label]').forEach(el => el.setAttribute('aria-label', text(el.dataset.i18nLabel).value));
     $$('.card').forEach(labelCard);
+    typer.prepare();
     fitAll();
     $$('[data-lang]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.lang === lang)));
     try { localStorage.setItem('legalia-lang', lang); } catch (e) { /* storage blocked: the choice just isn't remembered */ }
@@ -58,11 +59,13 @@
       if (el.dataset.k === 'email') el.textContent = `${id}@legalia.ee`;
       else el.dataset.i18n = `team.${id}.${el.dataset.k}`;
     });
-    const back = $('.back', card);
+    const front = $('.front', card), back = $('.back', card);
+    front.id = `photo-${id}`;
     back.id = `bio-${id}`;
-    $('.flip', card).setAttribute('aria-controls', back.id);
+    $('.front .flip', card).setAttribute('aria-controls', back.id);
+    $('.back .flip', card).setAttribute('aria-controls', front.id);
     $('source', card).srcset = `${ASSETS}img/${id}.webp`;
-    const img = $('img', card);
+    const img = $('picture img', card);
     img.src = `${ASSETS}img/${id}.png`;
     // The first two cards are on screen everywhere; the rest sit off to the side on phones.
     img.loading = i < 2 ? 'eager' : 'lazy';
@@ -71,19 +74,19 @@
     setupCard(card);
   });
 
+  // Each face has its own flip button; its label names the person so it makes sense out of context.
   function labelCard(card) {
-    const id = card.dataset.id;
-    const flipped = $('.flip', card).getAttribute('aria-expanded') === 'true';
-    $('.flip', card).setAttribute('aria-label',
-      `${text(`team.${id}.name`).value}, ${text(`team.${id}.title`).value}. ${text(flipped ? 'card.back' : 'card.flip').value}`);
+    const name = text(`team.${card.dataset.id}.name`).value;
+    $('.front .flip', card).setAttribute('aria-label', `${text('card.flip').value}: ${name}`);
+    $('.back .flip', card).setAttribute('aria-label', `${text('card.back').value}: ${name}`);
   }
 
   /* The video plays only while a mouse is over the card AND the photo side faces the viewer.
      It is fetched on the first hover, never before, and never on touch screens. */
   function setupCard(card) {
-    const flipBtn = $('.flip', card);
     const video = $('video', card);
-    const back = $('.back', card);
+    const front = $('.front', card), back = $('.back', card);
+    const frontBtn = $('.flip', front), backBtn = $('.flip', back);
     let hovering = false;
     let playedThisHover = false; // the clip runs once per hover, then rests on its last frame
 
@@ -91,6 +94,9 @@
     const facesViewer = () => !card.classList.contains('flipped') && !card.classList.contains('flipping');
     const shouldPlay = () => hovering && facesViewer() && !reduceMotion.matches && !document.hidden;
 
+    // Seek only when not already at the start: Firefox stalls ("waiting" forever) on a
+    // redundant seek to 0 right before play(), so every hover after the first froze there.
+    function rewind() { if (video.readyState > 0 && video.currentTime !== 0) video.currentTime = 0; }
     function play() {
       if (playedThisHover || !shouldPlay()) return;
       playedThisHover = true;
@@ -99,9 +105,6 @@
       const p = video.play();
       if (p) p.catch(() => {}); // autoplay refusals and interrupted loads are harmless here
     }
-    // Seek only when not already at the start: Firefox stalls ("waiting" forever) on a
-    // redundant seek to 0 right before play(), so every hover after the first froze there.
-    function rewind() { if (video.readyState > 0 && video.currentTime !== 0) video.currentTime = 0; }
     function stop() {
       video.pause();
       card.classList.remove('is-playing');
@@ -117,14 +120,13 @@
     let busy = false;
     const turn = $('.turn', card);
     async function setFlipped(on) {
-      if (busy) return; // a click during a turn is ignored rather than queued
+      if (busy) return; // a press during a turn is ignored rather than queued
       busy = true;
+      const hadFocus = document.activeElement === (on ? frontBtn : backBtn);
       stop(); // the video never runs during a turn, in either direction
       if (on) video.hidden = true; // and is gone entirely on the text side
-      // Screen readers get the new state at once.
-      flipBtn.setAttribute('aria-expanded', String(on));
+      front.setAttribute('aria-hidden', String(on));
       back.setAttribute('aria-hidden', String(!on));
-      labelCard(card);
       card.classList.add('flipping');
       card.classList.toggle('flipped', on);
       if (!reduceMotion.matches) {
@@ -139,50 +141,41 @@
       }
       card.classList.remove('flipping');
       if (!on) video.hidden = false; // the photo side is fully facing the viewer again
+      // Keyboard users keep their place: focus moves to the button on the side now showing.
+      if (hadFocus) (on ? backBtn : frontBtn).focus({ preventScroll: true });
       busy = false;
       // Turning back to the photo does not restart the clip: that would be a second play in one hover.
     }
 
-    // A real <button>, so Enter and Space flip it without extra key handling.
-    flipBtn.addEventListener('click', () => setFlipped(!card.classList.contains('flipped')));
+    // Only the buttons flip the card, so the rest of it (names, emails) can be selected and copied.
+    frontBtn.addEventListener('click', () => setFlipped(true));
+    backBtn.addEventListener('click', () => setFlipped(false));
     card.addEventListener('pointerenter', e => {
       if (e.pointerType !== 'mouse') return;
       hovering = true; playedThisHover = false;
-      card.classList.add('tracking');
       if (facesViewer()) play(); // on the text side a hover does nothing to the video
     });
     card.addEventListener('pointerleave', e => {
       if (e.pointerType !== 'mouse') return;
       hovering = false;
       if (!video.hidden) stop(); // no seeking a hidden video on the text side
-      card.classList.remove('tracking'); // settles back over the slower .8s
-      card.style.setProperty('--rx', '0deg'); card.style.setProperty('--ry', '0deg');
-    });
-
-    // Tilt follows the mouse: the part of the card under the pointer dips away a little.
-    let tiltFrame = 0, px = 0, py = 0;
-    card.addEventListener('pointermove', e => {
-      if (e.pointerType !== 'mouse' || reduceMotion.matches) return;
-      const r = card.getBoundingClientRect();
-      px = ((e.clientX - r.left) / r.width) * 2 - 1;  // -1 left edge, 1 right edge
-      py = ((e.clientY - r.top) / r.height) * 2 - 1;  // -1 top, 1 bottom
-      if (!tiltFrame) tiltFrame = requestAnimationFrame(() => {
-        tiltFrame = 0;
-        if (!hovering) return;
-        card.style.setProperty('--ry', `${(px * 12).toFixed(2)}deg`);
-        card.style.setProperty('--rx', `${(-py * 8).toFixed(2)}deg`);
-      });
     });
   }
 
-  /* Fit: measured with offsets, so the flip and the tilt don't distort the numbers.
-     1. If any hint would touch its name, all hints move down to the title line together.
+  /* Fit: measured with offsets, so the flip and the hover lift don't distort the numbers.
+     1. If any flip button (front or back) would touch its name, all of them move to their own line under the title.
      2. A bio that runs into the email first loses some spacing, then shrinks in half-pixel steps. */
   function fitCards() {
-    list.classList.remove('hint-low');
+    list.classList.remove('flip-low');
     const cards = $$('.card');
-    if (cards.some(c => { const n = $('.who [data-k=name]', c), h = $('.hint', c); return n.offsetLeft + n.offsetWidth > h.offsetLeft - 8; }))
-      list.classList.add('hint-low');
+    const right = (box, el) => box.offsetLeft + el.offsetLeft + el.offsetWidth; // name end, in face coordinates
+    const clash = c => {
+      const fb = $('.front .flip', c), bb = $('.back .flip', c);
+      const textLeft = b => b.offsetLeft + parseFloat(getComputedStyle(b).paddingLeft);
+      return right($('.who', c), $('.who [data-k=name]', c)) > textLeft(fb) - 8 ||
+             right($('.bio', c), $('.bio [data-k=name]', c)) > textLeft(bb) - 8;
+    };
+    if (cards.some(clash)) list.classList.add('flip-low');
     cards.forEach(card => {
       const bio = $('.bio', card), mail = $('.mail', card);
       card.classList.remove('tight');
@@ -205,6 +198,49 @@
     while (inner.offsetHeight > room && size > 14) { size -= 0.5; text.style.fontSize = `${size}px`; }
   }
   const fitAll = () => { fitCards(); fitAbout(); };
+
+  /* ---------- "Meist" text types itself out the first time it comes into view ---------- */
+  /* Quick on purpose (about 1.2s for the whole paragraph). Screen readers get the full text
+     straight away from a hidden copy; the typed version is aria-hidden. Reduced motion: no typing. */
+  const typer = (() => {
+    const el = $('.about');
+    let state = 'idle'; // idle -> running -> done
+    let typedNode, rest, caret, full = '', frame = 0;
+    // Screen readers read the hidden full copy; the visible, typed version is aria-hidden.
+    function build(typedText) {
+      full = el.textContent;
+      const sr = document.createElement('span'); sr.className = 'sr-only'; sr.textContent = full;
+      const vis = document.createElement('span'); vis.setAttribute('aria-hidden', 'true');
+      typedNode = document.createTextNode(typedText ? full : '');
+      caret = document.createElement('span'); caret.className = 'caret';
+      rest = document.createElement('span'); rest.className = 'rest'; rest.textContent = typedText ? '' : full;
+      vis.append(typedNode, caret, rest);
+      el.replaceChildren(sr, vis);
+    }
+    function finish() { state = 'done'; rest.textContent = ''; caret.classList.add('blink'); }
+    function prepare() {
+      // Called after every language change (put() has just written the plain new text).
+      if (reduceMotion.matches) { cancelAnimationFrame(frame); state = 'done'; return; } // plain text, no caret
+      if (state === 'running') cancelAnimationFrame(frame);
+      if (state === 'idle') { build(false); return; }
+      build(true); finish(); // already typed once: show it all, caret blinking at the end
+    }
+    function start() {
+      if (state !== 'idle' || reduceMotion.matches) return;
+      state = 'running';
+      const duration = Math.min(3200, Math.max(2000, full.length * 5)); // about 2.5s for the Estonian text
+      const t0 = performance.now();
+      const step = now => {
+        const p = Math.min(1, (now - t0) / duration);
+        const n = Math.round(full.length * (1 - Math.pow(1 - p, 1.3))); // a touch faster at the start
+        typedNode.data = full.slice(0, n);
+        rest.textContent = full.slice(n);
+        if (p < 1) frame = requestAnimationFrame(step); else finish();
+      };
+      frame = requestAnimationFrame(step);
+    }
+    return { prepare, start, get state() { return state; } };
+  })();
   let fitFrame = 0;
   addEventListener('resize', () => { cancelAnimationFrame(fitFrame); fitFrame = requestAnimationFrame(fitAll); });
   if (document.fonts) document.fonts.ready.then(fitAll);
@@ -224,7 +260,9 @@
     const mid = innerHeight * 0.5;
     const cur = contact.getBoundingClientRect().top < mid ? 'kontakt' : about.getBoundingClientRect().top < mid ? 'meist' : null;
     navLinks.forEach(a => (a.dataset.nav === cur ? a.setAttribute('aria-current', 'true') : a.removeAttribute('aria-current')));
-    if (about.getBoundingClientRect().top < innerHeight * 0.25) stopAll();
+    const aboutTop = about.getBoundingClientRect().top;
+    if (aboutTop < innerHeight * 0.25) stopAll();
+    if (aboutTop < innerHeight * 0.35) typer.start(); // starts as the text slides into view
   }
   addEventListener('scroll', () => { if (!ticking) { ticking = true; requestAnimationFrame(onScroll); } }, { passive: true });
 
