@@ -63,8 +63,9 @@ header > *{pointer-events:auto}
 /* When the window is shorter than the hero, the negative top lets it scroll until the cards
    reach the bottom edge, and only then pins it. */
 .hero{position:sticky;top:min(0px, calc(var(--screen) - var(--hero-h)));z-index:0;height:var(--hero-h);background:var(--paper)}
-.cards{position:absolute;left:0;right:0;bottom:var(--lift);margin:0;list-style:none;align-items:end}
-.card{position:relative;aspect-ratio:55/85;max-height:calc(var(--hero-h) - 110px - var(--lift));font-size:var(--card-text);line-height:1.45;letter-spacing:.01em}
+/* The row sits in the vertical middle of the first screen. */
+.cards{position:absolute;left:0;right:0;top:50%;margin:0;list-style:none;align-items:end;translate:0 -50%}
+.card{position:relative;aspect-ratio:55/85;max-height:calc(var(--hero-h) - 2 * 90px);font-size:var(--card-text);line-height:1.45;letter-spacing:.01em}
 /* Two layers, so the two motions never fight:
    .inner  - lifts the card a little on hover
    .turn   - the flip, one continuous 180deg turn.
@@ -212,3 +213,18 @@ header > *{pointer-events:auto}
   .card:hover .inner{transform:none}
   .card.to-back .turn,.card.to-front .turn,.card.to-back .face,.card.to-front .face{animation:none}
 }
+
+/* ---------- opening ---------- */
+/* Until the opening ends, the header and the cards wait out of sight. */
+.intro{position:fixed;inset:0;z-index:60;overflow:hidden;pointer-events:none}
+.intro-video{position:absolute;left:0;top:0;max-width:none;transform-origin:0 0;background:var(--paper)}
+.intro-mark{position:absolute;left:0;top:0;color:#fff;opacity:0;overflow:visible}
+.intro ~ header .home,.intro ~ header .menu{opacity:0}
+.intro ~ main .hero .card{opacity:0;translate:0 28px}
+.intro.landed ~ header .home,.intro.landed ~ header .menu{opacity:1;transition:opacity .8s ease}
+.intro.landed ~ main .hero .card{opacity:1;translate:0 0;transition:opacity .7s ease,translate .9s var(--ease)}
+.intro.landed ~ main .hero .card:nth-child(2){transition-delay:.07s}
+.intro.landed ~ main .hero .card:nth-child(3){transition-delay:.14s}
+.intro.landed ~ main .hero .card:nth-child(4){transition-delay:.21s}
+.intro.landed ~ main .hero .card:nth-child(5){transition-delay:.28s}
+@media (prefers-reduced-motion:reduce){ .intro{display:none} }
