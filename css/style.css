@@ -8,7 +8,6 @@
   --mute:#a3a3a3;        /* secondary text on paper */
   --on-ink:#ededed;      /* text on ink */
   --on-ink-mute:#7d7d7d; /* secondary text on ink */
-  --stone:#c9c9c9;      /* the experience page */
   --accent:#6f2c3f;      /* Pantone 491 C: the contact page */
   --on-accent-mute:#c5abb2; /* secondary text on the accent (60% white over it) */
   --sans:"Helvetica Neue",Helvetica,Arial,sans-serif;
@@ -169,18 +168,17 @@ header.at-hero .home{opacity:0;pointer-events:none}
 
 /* ---------- about ---------- */
 /* Black, the description large at the top left (the .about rule above). At least one screen tall,
-   so at the very bottom it reaches the top edge and the grey page above never shows. */
+   so at the very bottom it reaches the top edge and the year page above never shows. */
 .meist{min-height:var(--screen);padding-block:110px 160px}
 
-/* ---------- experience: a grey page with the year ---------- */
+/* ---------- experience: a light page with the year ---------- */
 /* Two screens tall; its content sticks for the first, so the page stays put while the scroll turns the
    year from 1992 to this year (main.js), then scrolls on to the contacts. The year runs across the full
    width, the line runs margin to margin under it, and both sit on the bottom margin.
    main.js sizes the year so its digits run exactly from the left margin to the right one. */
-.years{position:relative;z-index:1;height:calc(var(--screen) * 2);background:var(--stone);color:var(--ink)}
+.years{position:relative;z-index:1;height:calc(var(--screen) * 2);background:var(--paper);color:var(--fg)}
 .years .pin{position:sticky;top:0;height:var(--screen);display:flex;flex-direction:column;justify-content:flex-end;gap:clamp(24px, 3vw, 44px);padding-bottom:var(--gut);overflow:clip}
 .years .lede{grid-column:1 / -1;margin:0;font-size:var(--step-2);line-height:1.12;letter-spacing:-.02em;text-wrap:pretty}
-.years ::selection{background:var(--ink);color:var(--stone)}
 /* The year: four columns of digits 0-9 that roll like an odometer.
    Each column is a window as tall as the digits' ink (--yh), so nothing shows above or below the digits. */
 .year{display:flex;padding-left:var(--gut);margin:0;font-size:calc((100vw - 2 * var(--gut)) / 2.2);font-weight:400;line-height:1;font-variant-numeric:tabular-nums}
@@ -229,7 +227,8 @@ main{position:relative;z-index:1}
 }
 
 /* ---------- from 761px: the cards as folders ---------- */
-/* One card open, the others a strip of their left side, each one seemingly lying on top of the one
+/* At rest all five cards share the row, each showing the left part of itself; hovering one opens it
+   and the others narrow to a strip of their left side, each one seemingly lying on top of the one
    before it: the shadow on every card's left edge falls on its neighbour. The card's content keeps
    the open width (--open-w) and the card only shows as much of it as its own width allows, so
    nothing re-wraps while it opens. Sizes come from main.js (folder.size). */
@@ -238,6 +237,7 @@ main{position:relative;z-index:1}
   .cards .card{flex:none;width:var(--strip, 20%);height:var(--open-h, 60vh);max-height:none;aspect-ratio:auto;overflow:hidden;background:var(--card);
     box-shadow:-18px 0 30px -16px rgba(0,0,0,.32),0 10px 26px -12px rgba(0,0,0,.14);transition:width .7s cubic-bezier(.19,1,.22,1)}
   .cards .card:first-child{box-shadow:0 10px 26px -12px rgba(0,0,0,.14)}
+  .cards:not(.opened) .card{width:var(--rest, 20%)}
   .cards .card.open{width:var(--open-w, 30%)}
   .cards .card:not(.open){cursor:pointer}
   .cards .card .inner{right:auto;width:var(--open-w, 30%)}

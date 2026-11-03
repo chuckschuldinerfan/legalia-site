@@ -279,12 +279,15 @@
   /* ---------- tablets and desktops: the cards as folders ---------- */
   /* One card is open at full width; the others show only a strip of their left side, as if each
      one lay on top of the one before it (the shadow on each card's left edge does the rest).
-     The row fills the width between the margins: strip = (row - open card) / 4. Hovering a strip,
-     clicking it or tabbing into it opens that card. */
+     At rest (standby) no card is open and all five share the row equally. Hovering a card,
+     clicking it or tabbing into it opens it; the others narrow to strip = (row - open card) / 4. */
   const folder = (() => {
     const cards = $$('.card', list);
     let lx = -1, ly = -1;
-    function open(card) { cards.forEach(c => c.classList.toggle('open', c === card)); }
+    function open(card) {
+      cards.forEach(c => c.classList.toggle('open', c === card));
+      list.classList.toggle('opened', !!card);
+    }
     function size() {
       if (phone.matches) return;
       const cs = getComputedStyle(list);
@@ -295,6 +298,7 @@
       list.style.setProperty('--open-w', `${w.toFixed(1)}px`);
       list.style.setProperty('--open-h', `${(w * 85 / 55).toFixed(1)}px`);
       list.style.setProperty('--strip', `${((row - w) / (cards.length - 1)).toFixed(1)}px`);
+      list.style.setProperty('--rest', `${(row / cards.length).toFixed(1)}px`);
       list.style.setProperty('--card-text', `${Math.min(15, Math.max(12, w * 0.03)).toFixed(1)}px`);
     }
     // Only a real mouse move switches cards: while the row re-arranges, cards slide under a still
@@ -307,7 +311,9 @@
     });
     list.addEventListener('click', e => { const c = e.target.closest('.card'); if (c && !phone.matches) open(c); });
     list.addEventListener('focusin', e => { const c = e.target.closest('.card'); if (c && !phone.matches) open(c); });
-    open(cards[0]);
+    // Mouse gone: every card folds back to the same width (standby), unless the keyboard is inside.
+    list.addEventListener('pointerleave', e => { if (e.pointerType === 'mouse' && !phone.matches && !list.contains(document.activeElement)) open(null); });
+    list.addEventListener('focusout', e => { if (!list.contains(e.relatedTarget) && !list.matches(':hover')) open(null); });
     return { size };
   })();
   const fitAll = () => { folder.size(); fitCards(); carousel.render(); };
