@@ -11,6 +11,7 @@
   const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
 
   const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)');
+  const wait = ms => new Promise(r => setTimeout(r, ms));
   let lang = 'et';
 
   /* ---------- texts ---------- */
@@ -216,6 +217,9 @@
       if (on) video.hidden = true; // and is gone entirely on the text side
       front.setAttribute('aria-hidden', String(on));
       back.setAttribute('aria-hidden', String(!on));
+      // Tablets and desktops: the card first comes out of the deck, above the others, and turns there.
+      const deck = !phone.matches && !reduceMotion.matches;
+      if (on && deck) { card.classList.add('out'); await wait(380); }
       card.classList.add('flipping');
       card.classList.toggle('flipped', on);
       if (!reduceMotion.matches) {
@@ -229,6 +233,11 @@
         card.classList.remove(cls);
       }
       card.classList.remove('flipping');
+      if (!on && card.classList.contains('out')) {           // and after turning back it goes back into the deck
+        card.classList.add('returning'); card.classList.remove('out');
+        await wait(450);
+        card.classList.remove('returning');
+      }
       if (!on) video.hidden = false; // the photo side is fully facing the viewer again
       // Keyboard users keep their place: focus moves to the button on the side now showing.
       if (hadFocus) (on ? backBtn : frontBtn).focus({ preventScroll: true });
@@ -237,6 +246,7 @@
     }
 
     // Only the buttons flip the card, so the rest of it (names, emails) can be selected and copied.
+    card.unflip = () => setFlipped(false);
     frontBtn.addEventListener('click', () => setFlipped(true));
     backBtn.addEventListener('click', () => setFlipped(false));
     card.addEventListener('pointerenter', e => {
@@ -279,11 +289,15 @@
   /* ---------- tablets and desktops: the cards as folders ---------- */
   /* One card is open at full width; the others show only a strip of their left side, as if each
      one lay on top of the one before it (the shadow on each card's left edge does the rest).
-     At rest (standby) no card is open and all five share the row equally. Hovering a card,
-     clicking it or tabbing into it opens it; the others narrow to strip = (row - open card) / 4. */
+     The last card is the top of the deck: its left edge stays put whichever other card opens
+     (it only moves when it opens itself), so it never slides under the pointer.
+     At rest (standby) no card is open: the last one shows a strip, the other four share the rest.
+     A card opens when the pointer settles on it (a fast sweep across the row opens nothing on the
+     way), or on click or keyboard focus. While a card is flipped out of the deck, the others wait. */
   const folder = (() => {
     const cards = $$('.card', list);
-    let lx = -1, ly = -1;
+    let lx = -1, ly = -1, pend = 0, pendCard = null;
+    const out = () => cards.find(c => c.classList.contains('out'));
     function open(card) {
       cards.forEach(c => c.classList.toggle('open', c === card));
       list.classList.toggle('opened', !!card);
@@ -295,25 +309,35 @@
       const min = { et: 250, en: 270, ru: 290 }[lang] || 250;            // the longest bio still fits
       let w = Math.min((list.parentElement.clientHeight - 180) * 55 / 85, row * 0.4);
       w = Math.max(w, min);
+      const strip = (row - w) / (cards.length - 1);
       list.style.setProperty('--open-w', `${w.toFixed(1)}px`);
       list.style.setProperty('--open-h', `${(w * 85 / 55).toFixed(1)}px`);
-      list.style.setProperty('--strip', `${((row - w) / (cards.length - 1)).toFixed(1)}px`);
-      list.style.setProperty('--rest', `${(row / cards.length).toFixed(1)}px`);
+      list.style.setProperty('--strip', `${strip.toFixed(1)}px`);
+      list.style.setProperty('--rest', `${((row - strip) / (cards.length - 1)).toFixed(1)}px`);
       list.style.setProperty('--card-text', `${Math.min(15, Math.max(12, w * 0.03)).toFixed(1)}px`);
     }
-    // Only a real mouse move switches cards: while the row re-arranges, cards slide under a still
-    // pointer, and the browser's synthetic moves (same coordinates) must not open those.
+    const cancel = () => { clearTimeout(pend); pendCard = null; };
+    // Only a real mouse move counts: while the row re-arranges, cards slide under a still pointer,
+    // and the browser's synthetic moves (same coordinates) must not open those.
     list.addEventListener('pointermove', e => {
-      if (e.pointerType !== 'mouse' || phone.matches || (e.clientX === lx && e.clientY === ly)) return;
+      if (e.pointerType !== 'mouse' || phone.matches || out() || (e.clientX === lx && e.clientY === ly)) return;
       lx = e.clientX; ly = e.clientY;
       const c = e.target.closest('.card');
-      if (c && !c.classList.contains('open')) open(c);
+      if (!c || c.classList.contains('open')) return cancel();
+      if (c === pendCard) return;
+      cancel(); pendCard = c;
+      pend = setTimeout(() => { pendCard = null; open(c); }, 110);
     });
-    list.addEventListener('click', e => { const c = e.target.closest('.card'); if (c && !phone.matches) open(c); });
-    list.addEventListener('focusin', e => { const c = e.target.closest('.card'); if (c && !phone.matches) open(c); });
-    // Mouse gone: every card folds back to the same width (standby), unless the keyboard is inside.
-    list.addEventListener('pointerleave', e => { if (e.pointerType === 'mouse' && !phone.matches && !list.contains(document.activeElement)) open(null); });
-    list.addEventListener('focusout', e => { if (!list.contains(e.relatedTarget) && !list.matches(':hover')) open(null); });
+    list.addEventListener('click', e => {
+      const c = e.target.closest('.card');
+      if (!c || phone.matches || e.target.closest('.flip')) return;
+      const o = out();
+      if (o && o !== c) { o.unflip(); return; } // the first click elsewhere puts the flipped card back
+      cancel(); open(c);
+    });
+    list.addEventListener('focusin', e => { const c = e.target.closest('.card'); if (c && !phone.matches && !out()) open(c); });
+    // Mouse gone: every card folds back (standby), unless the keyboard is inside or a card is flipped out.
+    list.addEventListener('pointerleave', e => { cancel(); if (e.pointerType === 'mouse' && !phone.matches && !out() && !list.contains(document.activeElement)) open(null); });
     return { size };
   })();
   const fitAll = () => { folder.size(); fitCards(); carousel.render(); };

@@ -78,11 +78,11 @@ header.at-hero .home{opacity:0;pointer-events:none}
 /* The cards slide in from the right, one after another, the first time the section comes into view (main.js adds .in). */
 /* Each card starts a full screen to the right and slides into its place, one after another. */
 .team .card{opacity:0;translate:100vw 0}
-.team.in .card{opacity:1;translate:0 0;transition:opacity .35s ease,translate 1.5s cubic-bezier(.19,1,.22,1),width .7s cubic-bezier(.19,1,.22,1)}
-.team.in .card:nth-child(2){transition-delay:.15s,.15s,0s}
-.team.in .card:nth-child(3){transition-delay:.3s,.3s,0s}
-.team.in .card:nth-child(4){transition-delay:.45s,.45s,0s}
-.team.in .card:nth-child(5){transition-delay:.6s,.6s,0s}
+.team.in .card{opacity:1;translate:0 0;transition:opacity .35s ease,translate 1.5s cubic-bezier(.19,1,.22,1),width .7s cubic-bezier(.19,1,.22,1),transform .45s var(--ease)}
+.team.in .card:nth-child(2){transition-delay:.15s,.15s,0s,0s}
+.team.in .card:nth-child(3){transition-delay:.3s,.3s,0s,0s}
+.team.in .card:nth-child(4){transition-delay:.45s,.45s,0s,0s}
+.team.in .card:nth-child(5){transition-delay:.6s,.6s,0s,0s}
 .cards{position:absolute;left:0;right:0;top:50%;margin:0;list-style:none;align-items:end;translate:0 -50%}
 .card{position:relative;aspect-ratio:55/85;max-height:calc(var(--hero-h) - 2 * 90px);font-size:var(--card-text);line-height:1.45;letter-spacing:.01em}
 /* Two layers, so the two motions never fight:
@@ -172,11 +172,11 @@ header.at-hero .home{opacity:0;pointer-events:none}
 .meist{min-height:var(--screen);padding-block:110px 160px}
 
 /* ---------- experience: a light page with the year ---------- */
-/* Two screens tall; its content sticks for the first, so the page stays put while the scroll turns the
+/* Three screens tall; its content sticks for the first two, so the page stays put while the scroll turns the
    year from 1992 to this year (main.js), then scrolls on to the contacts. The year runs across the full
    width, the line runs margin to margin under it, and both sit on the bottom margin.
    main.js sizes the year so its digits run exactly from the left margin to the right one. */
-.years{position:relative;z-index:1;height:calc(var(--screen) * 2);background:var(--paper);color:var(--fg)}
+.years{position:relative;z-index:1;height:calc(var(--screen) * 3);background:var(--paper);color:var(--fg)}
 .years .pin{position:sticky;top:0;height:var(--screen);display:flex;flex-direction:column;justify-content:flex-end;gap:clamp(24px, 3vw, 44px);padding-bottom:var(--gut);overflow:clip}
 .years .lede{grid-column:1 / -1;margin:0;font-size:var(--step-2);line-height:1.12;letter-spacing:-.02em;text-wrap:pretty}
 /* The year: four columns of digits 0-9 that roll like an odometer.
@@ -235,14 +235,21 @@ main{position:relative;z-index:1}
 @media (min-width:761px){
   .cards.grid{display:flex;align-items:flex-end;column-gap:0;overflow:visible;scroll-snap-type:none}
   .cards .card{flex:none;width:var(--strip, 20%);height:var(--open-h, 60vh);max-height:none;aspect-ratio:auto;overflow:hidden;background:var(--card);
-    box-shadow:-18px 0 30px -16px rgba(0,0,0,.32),0 10px 26px -12px rgba(0,0,0,.14);transition:width .7s cubic-bezier(.19,1,.22,1)}
+    box-shadow:-18px 0 30px -16px rgba(0,0,0,.32),0 10px 26px -12px rgba(0,0,0,.14);transition:width .7s cubic-bezier(.19,1,.22,1),transform .45s var(--ease)}
   .cards .card:first-child{box-shadow:0 10px 26px -12px rgba(0,0,0,.14)}
   .cards:not(.opened) .card{width:var(--rest, 20%)}
+  .cards .card:last-child:not(.open){width:var(--strip, 20%)}
   .cards .card.open{width:var(--open-w, 30%)}
   .cards .card:not(.open){cursor:pointer}
   .cards .card .inner{right:auto;width:var(--open-w, 30%)}
   .cards .face,.cards .card:hover .face{box-shadow:none}
   .cards .card:hover .inner{transform:none}
+  /* Flipping: the card comes out of the deck (lifted, a little larger, above its neighbours) and
+     turns there as a whole card; turned back, it sinks into the deck again (main.js: .out, .returning). */
+  .cards .card.out,.cards .card.returning{z-index:5}
+  .cards .card.out{overflow:visible;background:none;box-shadow:none;transform:translateY(-18px) scale(1.06)}
+  .cards .face{transition:box-shadow .45s}
+  .cards .card.out .face{box-shadow:0 2px 6px rgba(0,0,0,.06),0 40px 70px -24px rgba(0,0,0,.38)}
 }
 
 /* ---------- phones: narrower margins, the menu stacks under itself on the right ---------- */
