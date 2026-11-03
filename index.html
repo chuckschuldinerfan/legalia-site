@@ -6,10 +6,10 @@
 <title>Legalia Advokaadibüroo</title>
 <meta name="theme-color" content="#f9f9f9">
 <link rel="icon" href="assets/logo.svg" type="image/svg+xml">
-<link rel="stylesheet" href="css/style.css?v=v2-13">
-<script src="js/i18n.js?v=v2-13" defer></script>
-<script src="js/main.js?v=v2-13" defer></script>
-<script src="js/intro.js?v=v2-13" defer></script>
+<link rel="stylesheet" href="css/style.css?v=v2-14">
+<script src="js/i18n.js?v=v2-14" defer></script>
+<script src="js/main.js?v=v2-14" defer></script>
+<script src="js/intro.js?v=v2-14" defer></script>
 </head>
 <body>
 <!-- All texts live in js/i18n.js. Elements here only carry their key (data-i18n for text, data-i18n-label for aria-label). -->
@@ -30,15 +30,13 @@
     <ul class="cards grid" id="cards" role="list"></ul>
   </section>
 
-  <section class="ink about-sec" id="meist" aria-labelledby="meist-h">
+  <!-- "Meist" and "Kontakt" share one burgundy page: about text first, then phone and email. -->
+  <section class="ink contact" id="meist" aria-labelledby="meist-h">
     <div class="grid">
       <h2 class="label small" id="meist-h" data-i18n="about.label"></h2>
       <p class="about" data-i18n="about.text"></p>
     </div>
-  </section>
-
-  <section class="ink contact" id="kontakt" aria-labelledby="kontakt-h">
-    <div class="grid">
+    <div class="grid reach-row" id="kontakt">
       <h2 class="label small" id="kontakt-h" data-i18n="contact.label"></h2>
       <div class="reach">
         <a href="tel:+3726272560">627 25 60</a>

@@ -23,9 +23,8 @@
      Every text on the page uses a step; nothing is sized ad hoc. */
   --step--1:11px;                                            /* labels, menu, footer (10.4-10.7, rounded) */
   --step-0:clamp(13px, 12.31px + .192vw, 16px);              /* body */
-  --step-2:clamp(20.31px, 16.69px + 1.006vw, 36px);          /* address */
-  --step-3:clamp(25.39px, 18.79px + 1.834vw, 54px);          /* about text, map link */
-  --step-5:clamp(39.67px, 20.79px + 5.246vw, 121.5px);       /* phone and email */
+  --step-1:clamp(16.25px, 14.46px + .497vw, 24px);           /* phone and email */
+  --step-2:clamp(20.31px, 16.69px + 1.006vw, 36px);          /* about text */
   /* The business cards are objects with their own proportions: their text scales with the card
      width rather than the page, between 10 and 13px (12px in the sideways row). */
   --card-text:clamp(10px, .8vw, 13px);
@@ -142,11 +141,8 @@ header.on-accent .menu a:hover,header.on-accent .menu button:hover,header.on-acc
 /* ---------- dark sections: normal flow, stacked above the pinned hero ---------- */
 .ink{position:relative;z-index:1;background:var(--ink);color:var(--on-ink)}
 .label{color:var(--on-ink-mute)}
-/* Pins like the hero: it stops at the top edge, holds one full screen, and Kontakt slides over it. */
-.about-sec{position:sticky;top:0;z-index:1;height:var(--screen);overflow:hidden;display:flex;flex-direction:column;justify-content:center;padding-block:110px 80px}
-.about-sec .grid{row-gap:28px}
-/* Step 3 of the scale; main.js steps it down only if the section would not fit one screen (small phones, long translations). */
-.about{grid-column:1 / span 5;font-size:var(--step-3);line-height:1.12;letter-spacing:-.02em;max-width:24em;text-wrap:pretty}
+/* Step 2 of the scale; main.js steps it down only if the page would not fit one screen (small phones, long translations). */
+.about{grid-column:1 / span 5;font-size:var(--step-2);line-height:1.12;letter-spacing:-.02em;max-width:24em;text-wrap:pretty}
 /* Typing reveal (main.js), the first time the section comes into view. The untyped rest of the text
    is already laid out but invisible, so lines never re-wrap while it types. The caret is a
    zero-width inline, which adds no break opportunity. */
@@ -157,22 +153,23 @@ header.on-accent .menu a:hover,header.on-accent .menu button:hover,header.on-acc
 .about .caret.blink::after{animation:caret-blink 1.06s steps(1) infinite}
 @keyframes caret-blink{0%{opacity:1}50%{opacity:0}}
 
-/* ---------- contact: phone and email lead, address and map link below ---------- */
-.contact{z-index:2;background:var(--accent);--on-ink-mute:var(--on-accent-mute);min-height:var(--hero-h);display:flex;flex-direction:column;padding-block:110px calc(26px + env(safe-area-inset-bottom, 0px))}
+/* ---------- about + contact: one burgundy screen. About text, then phone and email, address and map link at the bottom ---------- */
+.contact{z-index:2;background:var(--accent);--on-ink-mute:var(--on-accent-mute);min-height:var(--screen);display:flex;flex-direction:column;padding-block:110px calc(26px + env(safe-area-inset-bottom, 0px))}
 .contact .grid{row-gap:28px}
-.reach{grid-column:1 / span 5;display:flex;flex-direction:column;gap:.04em;font-size:var(--step-5);line-height:1;letter-spacing:-.045em}
+.reach-row{margin-top:40px}
+.reach{grid-column:1 / span 5;display:flex;flex-direction:column;gap:.15em;font-size:var(--step-1);line-height:1.2;letter-spacing:-.01em}
 .reach a{width:max-content;max-width:100%;overflow-wrap:anywhere;user-select:all;-webkit-user-select:all;transition:color .2s}
 .reach a:hover{color:#fff}
-.reach a:focus-visible{outline:1px solid var(--on-ink);outline-offset:6px}
-.place{margin-top:auto;padding-top:80px;align-items:end;row-gap:28px}
-.addr{grid-column:1 / span 2;font-size:var(--step-2);line-height:1.2;letter-spacing:-.015em;color:var(--on-ink)}
-.find{grid-column:4 / span 2;justify-self:end;display:inline-flex;align-items:center;gap:.4em;font-size:var(--step-3);line-height:1;letter-spacing:-.025em;color:#fff}
+.reach a:focus-visible{outline:1px solid var(--on-ink);outline-offset:4px}
+.place{margin-top:auto;padding-top:40px;align-items:end;row-gap:28px}
+.addr{grid-column:1 / span 2;font-size:var(--step-0);line-height:1.4;color:var(--on-ink)}
+.find{grid-column:4 / span 2;justify-self:end;display:inline-flex;align-items:center;gap:.4em;font-size:var(--step-1);line-height:1;letter-spacing:-.01em;color:#fff}
 /* Icons are SVG files in assets/icons (never text symbols, which iOS can turn into emoji). */
 .find .pin{width:.9em;height:.9em;flex:none}
 .find .arrow{flex:none;width:.8em;height:.8em;margin-left:.1em;transition:transform .3s var(--ease)}
 .find:hover .arrow{transform:translate(.15em,-.15em)}
 .find:focus-visible{outline:1px solid var(--on-ink);outline-offset:6px}
-.foot{margin-top:56px;color:var(--on-ink-mute)}
+.foot{margin-top:32px;color:var(--on-ink-mute)}
 .foot p{grid-column:1 / -1;display:flex;align-items:center;gap:.25em}
 .foot .copy{width:1.05em;height:1.05em;flex:none}
 

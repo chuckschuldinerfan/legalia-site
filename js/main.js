@@ -69,7 +69,7 @@
     img.src = `${ASSETS}img/${id}.png`;
     // The first two cards are on screen everywhere; the rest sit off to the side on phones.
     img.loading = i < 2 ? 'eager' : 'lazy';
-    $('video', card).dataset.src = `${ASSETS}video/${id}.mp4`;
+    $('video', card).dataset.src = `${ASSETS}video/${id}.mp4?v=2`;
     list.append(card);
     setupCard(card);
   });
@@ -276,15 +276,13 @@
       while (overflows() && size > 8) { size -= 0.5; bio.style.fontSize = `${size}px`; }
     });
   }
-  // "Meist" pins as one screen: its text starts at step 3 of the type scale and steps down
-  // in half pixels only if label and text would not fit (small phones, longer translations).
+  // "Meist" and "Kontakt" share one screen: the about text starts at step 2 of the type scale and
+  // steps down in half pixels only if the page would grow taller than the screen (small phones, longer translations).
   function fitAbout() {
-    const sec = $('#meist'), inner = sec.firstElementChild, text = $('.about', sec);
+    const sec = $('#meist'), text = $('.about', sec);
     text.style.fontSize = '';
-    const cs = getComputedStyle(sec);
-    const room = sec.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom);
     let size = parseFloat(getComputedStyle(text).fontSize);
-    while (inner.offsetHeight > room && size > 14) { size -= 0.5; text.style.fontSize = `${size}px`; }
+    while (sec.offsetHeight > innerHeight + 1 && size > 14) { size -= 0.5; text.style.fontSize = `${size}px`; }
   }
   const fitAll = () => { fitCards(); fitAbout(); carousel.render(); };
 
@@ -340,34 +338,30 @@
 
   /* ---------- menu: highlight the section in view; stop videos once the hero is covered ---------- */
 
-  const about = $('#meist');
-  const contact = $('#kontakt');
+  const about = $('#meist'); // the about + contact page
   const header = $('header');
   const navLinks = $$('[data-nav]');
   let ticking = false;
   function onScroll() {
     ticking = false;
     const mid = innerHeight * 0.5;
-    const cur = contact.getBoundingClientRect().top < mid ? 'kontakt' : about.getBoundingClientRect().top < mid ? 'meist' : null;
-    navLinks.forEach(a => (a.dataset.nav === cur ? a.setAttribute('aria-current', 'true') : a.removeAttribute('aria-current')));
+    // Both menu items live on the last page, so both light up there.
+    const onPage = about.getBoundingClientRect().top < mid;
+    navLinks.forEach(a => (onPage ? a.setAttribute('aria-current', 'true') : a.removeAttribute('aria-current')));
     // Plain white from the moment the burgundy reaches the header's bottom edge: an inverted header
     // over it would flash blue-green. Over the black section above, plain white looks the same.
-    header.classList.toggle('on-accent', contact.getBoundingClientRect().top < header.getBoundingClientRect().bottom);
+    header.classList.toggle('on-accent', about.getBoundingClientRect().top < header.getBoundingClientRect().bottom);
     const aboutTop = about.getBoundingClientRect().top;
     if (aboutTop < innerHeight * 0.25) stopAll();
     if (aboutTop < innerHeight * 0.35) typer.start(); // starts as the text slides into view
   }
   addEventListener('scroll', () => { if (!ticking) { ticking = true; requestAnimationFrame(onScroll); } }, { passive: true });
 
-  /* Menu links scroll to where each section sits in the page. Plain anchors can't do this for
-     "Meist": it is pinned, so once Kontakt covers it the browser thinks it is already in view. */
-  const sectionTop = {
-    meist: () => $('main').offsetTop + $('.hero').offsetHeight,
-    kontakt: () => $('main').offsetTop + $('.hero').offsetHeight + about.offsetHeight
-  };
+  /* Both menu links scroll to the last page. Plain anchors can't: the hero is pinned, so the
+     browser's idea of where the page starts is off. */
   navLinks.forEach(a => a.addEventListener('click', e => {
     e.preventDefault();
-    scrollTo({ top: sectionTop[a.dataset.nav](), behavior: reduceMotion.matches ? 'auto' : 'smooth' });
+    scrollTo({ top: $('main').offsetTop + $('.hero').offsetHeight, behavior: reduceMotion.matches ? 'auto' : 'smooth' });
   }));
 
   /* ---------- smooth scrolling ---------- */
