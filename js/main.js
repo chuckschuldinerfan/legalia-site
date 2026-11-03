@@ -277,15 +277,14 @@
     });
   }
   /* ---------- tablets and desktops: the team as a row of files ---------- */
-  /* Six panels side by side: the intro and one file per person. One is open (4.8 times as wide as
-     the others, as on neuemontreal.com); the rest show only their left edge, where the name runs
-     upward. Each panel keeps its content at the open width and only shows as much as its own width
-     allows, so nothing re-wraps while it opens. The intro is open at first and again whenever the
-     pointer leaves the row. A file opens when the pointer settles on it (a fast sweep opens
-     nothing on the way), on click or on keyboard focus; opening plays its clip once. */
+  /* The intro on the left, then one file per person, at the sizes of neuemontreal.com's strips.
+     One file is always open (the first at the start, then the last one pointed at); the rest show
+     only their left edge, where the name runs upward. Each file keeps its content at the open
+     width and only shows as much as its own width allows, so nothing re-wraps while it opens.
+     A file opens when the pointer settles on it (a fast sweep opens nothing on the way), on click
+     or on keyboard focus; opening plays its clip once. */
   const files = (() => {
     const row = $('#files'), tpl = $('#file-tpl');
-    const intro = $('.opener', row);
     TEAM.forEach(id => {
       const f = tpl.content.firstElementChild.cloneNode(true);
       f.dataset.id = id;
@@ -300,7 +299,7 @@
       video.addEventListener('playing', () => { if (f.classList.contains('open')) f.classList.add('is-playing'); else stopClip(f); });
       row.append(f);
     });
-    const panels = $$('.file', row);
+    const panels = $$('.person', row);
     function stopClip(f) {
       const v = $('video', f);
       if (!v) return;
@@ -319,12 +318,13 @@
       f.classList.add('open');
       playClip(f);
     }
-    // Sizes: the row fills the space between the margins; 5 strips + 1 open panel of 4.8 strips.
+    // Sizes: neuemontreal.com's at 1440px wide (strip 73px, open 349px), scaled with the width;
+    // the open file never gets narrower than its bio needs.
     function size() {
       if (phone.matches) return;
-      const strip = row.clientWidth / (panels.length - 1 + 4.8);
-      row.style.setProperty('--strip', `${strip.toFixed(1)}px`);
-      row.style.setProperty('--open', `${(strip * 4.8).toFixed(1)}px`);
+      const w = row.clientWidth;
+      row.style.setProperty('--strip', `${Math.max(56, (w * 73) / 1440).toFixed(1)}px`);
+      row.style.setProperty('--open', `${Math.max(330, (w * 349) / 1440).toFixed(1)}px`);
       // A bio that would run into the email shrinks in half-pixel steps.
       $$('.person', row).forEach(f => {
         const body = $('.body', f), mail = $('.email', f);
@@ -341,16 +341,16 @@
     row.addEventListener('pointermove', e => {
       if (e.pointerType !== 'mouse' || (e.clientX === lx && e.clientY === ly)) return;
       lx = e.clientX; ly = e.clientY;
-      const f = e.target.closest('.file');
+      const f = e.target.closest('.person');
       if (!f || f.classList.contains('open')) return cancel();
       if (f === pendFile) return;
       cancel(); pendFile = f;
       pend = setTimeout(() => { pendFile = null; open(f); }, 110);
     });
-    row.addEventListener('pointerleave', e => { cancel(); if (e.pointerType === 'mouse' && !row.contains(document.activeElement)) open(intro); });
-    row.addEventListener('click', e => { const f = e.target.closest('.file'); if (f) { cancel(); open(f); } });
-    row.addEventListener('focusin', e => { const f = e.target.closest('.file'); if (f) open(f); });
-    row.addEventListener('focusout', e => { if (!row.contains(e.relatedTarget) && !row.matches(':hover')) open(intro); });
+    row.addEventListener('pointerleave', cancel);
+    row.addEventListener('click', e => { const f = e.target.closest('.person'); if (f) { cancel(); open(f); } });
+    row.addEventListener('focusin', e => { const f = e.target.closest('.person'); if (f) open(f); });
+    panels[0].classList.add('open');
     function label() { $$('.person', row).forEach(f => f.setAttribute('aria-label', text(`team.${f.dataset.id}.name`).value)); }
     return { size, label, stop: () => panels.forEach(stopClip) };
   })();

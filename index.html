@@ -6,10 +6,10 @@
 <title>Legalia Advokaadibüroo</title>
 <meta name="theme-color" content="#f9f9f9">
 <link rel="icon" href="assets/logo.svg" type="image/svg+xml">
-<link rel="stylesheet" href="css/style.css?v=v2-24">
-<script src="js/i18n.js?v=v2-24" defer></script>
-<script src="js/main.js?v=v2-24" defer></script>
-<script src="js/intro.js?v=v2-24" defer></script>
+<link rel="stylesheet" href="css/style.css?v=v2-25">
+<script src="js/i18n.js?v=v2-25" defer></script>
+<script src="js/main.js?v=v2-25" defer></script>
+<script src="js/intro.js?v=v2-25" defer></script>
 </head>
 <body>
 <!-- All texts live in js/i18n.js. Elements here only carry their key (data-i18n for text, data-i18n-label for aria-label). -->
@@ -32,10 +32,10 @@
   <!-- The team: the cards slide in once, the first time the section comes into view. -->
   <section class="team" id="team" data-i18n-label="hero.label">
     <ul class="cards grid" id="cards" role="list"></ul>
-    <!-- Tablets and desktops: the team as a row of files. The intro is open at first; pointing at a
+    <!-- Tablets and desktops: the intro on the left, then a row of five files; pointing at a
          name opens that person's file (main.js builds the five from #file-tpl). -->
     <div class="files" id="files">
-      <section class="file opener open" aria-labelledby="files-h">
+      <section class="file opener" aria-labelledby="files-h">
         <div class="in">
           <h2 class="files-h" id="files-h" data-i18n="files.title"></h2>
           <p class="files-p" data-i18n="files.text"></p>
@@ -88,12 +88,13 @@
 <template id="file-tpl">
   <article class="file person" tabindex="0">
     <div class="in">
-      <p class="tab"><span class="nm" data-k="name"></span><span class="g" data-k="title"></span></p>
+      <p class="tab"><span class="nm" data-k="name"></span></p>
       <div class="body">
         <div class="pic">
           <picture><source type="image/webp"><img alt="" width="700" height="800" decoding="async" loading="lazy"></picture>
           <video muted playsinline disablepictureinpicture preload="none" aria-hidden="true" tabindex="-1"></video>
         </div>
+        <p class="g" data-k="title"></p>
         <p class="lead" data-k="spec"></p>
         <p class="g" data-k="cred"></p>
         <p class="g" data-k="lang"></p>

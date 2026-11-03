@@ -228,32 +228,34 @@ main{position:relative;z-index:1}
 }
 
 /* ---------- from 761px: the team as a row of files ---------- */
-/* As on neuemontreal.com: the intro and five files side by side, one open at 4.8 times the width of
-   the others (sizes from main.js). A closed file shows only its left edge, where the name runs
-   upward; the open one adds the photo (its clip plays once) and the bio under it. The files are
-   white and each casts a shadow on the one before it, so they read as a stack. The open/close
-   motion starts slowly and settles slowly (.75s). Phones keep the business cards. */
+/* A copy of the strip section on neuemontreal.com at its sizes (measured at 1440px wide: strips
+   73px, the open one 349px, a 100px label column with a 1px rule, the row 765px tall from 100px
+   down), in white instead of colours, with a shadow on each file's left edge so they read as a
+   stack. The intro takes the rest of the width on the left; one file is always open, the last
+   one pointed at. Sizes scale with the width (main.js, files.size). Phones keep the business cards. */
 .files{display:none}
 @media (min-width:761px){
   .team .cards{display:none}
-  .files{position:absolute;left:var(--gut);right:var(--gut-r);top:50%;translate:0 -50%;height:min(calc(var(--hero-h) - 180px), 900px);display:flex;font-size:var(--step-0)}
-  .file{position:relative;flex:none;width:var(--strip, 10%);height:100%;overflow:hidden;transition:width .75s cubic-bezier(.5,0,.15,1)}
-  .file.open{width:var(--open, 50%)}
-  .file .in{position:absolute;top:0;bottom:0;left:0;width:var(--open, 50%)}
-  /* Intro: on the page itself, the title at the top, the line at the bottom. */
-  .opener .in{display:flex;flex-direction:column;justify-content:space-between;padding:0 var(--gap) 0 0}
-  .files-h{font-size:clamp(34px, 4.6vw, 72px);font-weight:300;line-height:.98;letter-spacing:-.035em}
-  .files-p{max-width:26em;font-size:var(--step-1);line-height:1.2;letter-spacing:-.01em}
+  .files{position:absolute;left:0;right:0;top:100px;height:calc(var(--hero-h) - 135px);display:flex}
+  .file{position:relative;flex:none;width:var(--strip, 73px);height:100%;overflow:hidden;transition:width .75s cubic-bezier(.5,0,.15,1)}
+  .file.open{width:var(--open, 349px)}
+  .file .in{position:absolute;top:0;bottom:0;left:0;width:var(--open, 349px)}
+  /* Intro: the title at the top, the line at the bottom. */
+  .file.opener{flex:1 1 auto;width:auto;overflow:visible}
+  .opener .in{right:0;width:auto;display:flex;flex-direction:column;justify-content:space-between;padding:24px var(--gut) 24px var(--gut)}
+  .files-h{font-size:clamp(44px, 5.3vw, 80px);font-weight:300;font-style:italic;line-height:.9;letter-spacing:-.03em}
+  .files-p{max-width:15em;font-size:var(--step-1);line-height:1.1;letter-spacing:-.01em}
   /* A person's file */
   .person{background:var(--card);box-shadow:-18px 0 30px -16px rgba(0,0,0,.3),0 10px 26px -12px rgba(0,0,0,.12);cursor:pointer;outline:none}
   .person.open{cursor:auto}
   .person:focus-visible .nm{text-decoration:underline;text-underline-offset:.12em;text-decoration-thickness:1px}
-  /* The name runs bottom to top, its end at the top, the title in small type beside it. */
-  .tab{position:absolute;top:24px;bottom:24px;left:20px;margin:0;display:flex;gap:.5em;writing-mode:vertical-rl;transform:rotate(180deg);text-align:end;white-space:nowrap}
-  .tab .nm{font-size:clamp(30px, 3.3vw, 54px);font-weight:400;line-height:1;letter-spacing:-.025em;color:var(--fg)}
-  .tab .g{font-size:var(--step-0);line-height:1}
-  .body{position:absolute;top:24px;bottom:24px;left:var(--strip, 10%);right:24px;display:flex;flex-direction:column;gap:1em;line-height:1.4}
-  .pic{position:relative;flex:none;align-self:flex-start;height:42%;aspect-ratio:7/8;margin-bottom:.6em;overflow:hidden;background:#fff}
+  /* The label column: 100px with a 1px rule on its right (seen only once the file is open). The name
+     runs bottom to top, its end 24px from the top, 14px from the left edge. */
+  .person .in::before{content:"";position:absolute;top:0;bottom:0;left:100px;width:1px;background:var(--fg)}
+  .tab{position:absolute;top:24px;bottom:24px;left:14px;margin:0;writing-mode:vertical-rl;transform:rotate(180deg);text-align:end;white-space:nowrap}
+  .tab .nm{font-size:clamp(48px, 5.3vw, 76px);font-weight:400;line-height:.95;letter-spacing:-.03em;color:var(--fg)}
+  .body{position:absolute;top:24px;bottom:24px;left:125px;right:24px;display:flex;flex-direction:column;gap:.9em;font-size:var(--step-0);line-height:1.15}
+  .pic{position:relative;flex:none;width:100%;aspect-ratio:7/8;max-height:45%;overflow:hidden;background:#fff}
   .pic img,.pic video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
   .pic video{opacity:0}
   .file.is-playing .pic video{opacity:1}
