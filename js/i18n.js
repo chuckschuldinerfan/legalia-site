@@ -14,6 +14,7 @@ window.LEGALIA_I18N = {
       label: 'Meist',
       text: 'Advokaadibüroo Legalia on asutatud 1992. Osutame kvaliteetset ja terviklikku õigusteenust, nõustades kohalikke ja väliskliente nii eraõiguse kui ka avaliku õiguse erinevates valdkondades. Meid iseloomustavateks märksõnadeks on kliendikesksus, konfidentsiaalsus, paindlikkus ja kiire reageerimine. Soovime pakkuda Teile tuge kõigis õigusküsimustes. Meie eesmärk on tagada Teie huvide tulemuslik kaitse ning probleemide õigeaegne lahendamine. Teenindame teid eesti, vene, inglise ja soome keeles.'
     },
+    experience: { text: 'Iga aasta alates 1992. aastast on lisanud meie kogemusele. Üle kolme aastakümne oleme nõustanud kliente nii eraõiguse kui ka avaliku õiguse küsimustes.' }, // own translation of the English
     contact: {
       label: 'Kontakt',
       address: ['Lootsi tn 8,', '10151 Tallinn'],
@@ -66,6 +67,7 @@ window.LEGALIA_I18N = {
       label: 'About',
       text: 'Law Office Legalia was established in 1992. We provide high-quality and comprehensive legal services, advising local and international clients in various areas of both private and public law. Our defining characteristics are client-centricity, confidentiality, flexibility, and quick response. We aim to offer you support in all legal matters. Our goal is to ensure the effective protection of your interests and the timely resolution of issues. We serve clients in Estonian, Russian, English, and Finnish.'
     },
+    experience: { text: 'Every year since 1992 has added to our experience. Over three decades, we have guided clients through matters in both private and public law.' },
     contact: { label: 'Contact', address: ['Lootsi tn 8,', '10151 Tallinn'], map: 'Find us on the map' }, // map: own translation
     team: {
       aivar: {
@@ -111,6 +113,7 @@ window.LEGALIA_I18N = {
       label: 'О нас',
       text: 'Адвокатское бюро Legalia основано в 1992 году. Мы оказываем качественные и комплексные юридические услуги, консультируя местных и зарубежных клиентов в различных областях частного и публичного права. Нас характеризуют клиентоориентированность, конфиденциальность, гибкость и быстрое реагирование. Мы стремимся оказать Вам поддержку во всех правовых вопросах. Наша цель — обеспечить эффективную защиту Ваших интересов и своевременное решение проблем. Мы обслуживаем клиентов на эстонском, русском, английском и финском языках.'
     },
+    experience: { text: 'Каждый год с 1992 года пополнял наш опыт. За более чем три десятилетия мы сопровождали клиентов в делах как частного, так и публичного права.' }, // own translation
     contact: { label: 'Контакты', address: ['Lootsi tn 8,', '10151 Tallinn'], map: 'Найти нас на карте' }, // map: own translation
     team: {
       aivar: {

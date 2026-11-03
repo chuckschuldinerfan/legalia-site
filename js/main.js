@@ -345,7 +345,7 @@
     seen.observe($('#cards')); // most of the row in view, so the slide is seen from its start
   }
 
-  /* ---------- the year: rolls from 1992 to this year once, the first time the about section comes into view ---------- */
+  /* ---------- the year: turns from 1992 to this year with the scroll, as the experience section comes into view ---------- */
   const FROM = 1992, TO = new Date().getFullYear();
   const yearEl = $('.year');
   const strips = [...String(TO)].map(() => {
@@ -394,21 +394,16 @@
   addEventListener('resize', fitYear);
   if (document.fonts) document.fonts.ready.then(fitYear);
 
-  if (reduceMotion.matches || !('IntersectionObserver' in window)) showYear(TO);
-  else {
-    showYear(FROM);
-    const roll = new IntersectionObserver(entries => {
-      if (!entries.some(e => e.isIntersecting)) return;
-      roll.disconnect();
-      const t0 = performance.now(), DUR = 2600;
-      (function step(now) {
-        const p = Math.min(1, (now - t0) / DUR);
-        showYear(FROM + (TO - FROM) * (1 - (1 - p) ** 3));                // fast start, slow settle
-        if (p < 1) requestAnimationFrame(step);
-      })(t0);
-    }, { threshold: 0.35 });
-    roll.observe(yearEl);
+  // 1992 while the section's top is at the bottom edge of the screen, this year once its bottom is.
+  // That point is always reachable (the contact bar only comes after it), and nothing is pinned.
+  const years = $('#kogemus');
+  function yearFromScroll() {
+    if (reduceMotion.matches) return showYear(TO);
+    const r = years.getBoundingClientRect();
+    const p = Math.min(1, Math.max(0, (innerHeight - r.top) / r.height));
+    showYear(FROM + (TO - FROM) * p);
   }
+  yearFromScroll();
 
   /* ---------- menu: highlight what is in view; stop card videos once the team is off screen ---------- */
   const about = $('#meist');
@@ -425,6 +420,7 @@
     header.classList.toggle('at-hero', scrollY < innerHeight * 0.5);
     if (team.getBoundingClientRect().bottom < innerHeight * 0.25) stopAll();
     if (aboutTop < mid) typer.start();
+    yearFromScroll();
   }
   addEventListener('scroll', () => { if (!ticking) { ticking = true; requestAnimationFrame(onScroll); } }, { passive: true });
   addEventListener('resize', onScroll);
