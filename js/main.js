@@ -341,8 +341,8 @@
       if (!entries.some(e => e.isIntersecting)) return;
       team.classList.add('in');
       seen.disconnect();
-    }, { threshold: 0.3 });
-    seen.observe(team);
+    }, { threshold: 0.6 });
+    seen.observe($('#cards')); // most of the row in view, so the slide is seen from its start
   }
 
   /* ---------- the year: rolls from 1992 to this year once, the first time the about section comes into view ---------- */
