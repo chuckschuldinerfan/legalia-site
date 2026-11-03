@@ -276,7 +276,41 @@
       while (overflows() && size > 8) { size -= 0.5; bio.style.fontSize = `${size}px`; }
     });
   }
-  const fitAll = () => { fitCards(); carousel.render(); };
+  /* ---------- tablets and desktops: the cards as folders ---------- */
+  /* One card is open at full width; the others show only a strip of their left side, as if each
+     one lay on top of the one before it (the shadow on each card's left edge does the rest).
+     The row fills the width between the margins: strip = (row - open card) / 4. Hovering a strip,
+     clicking it or tabbing into it opens that card. */
+  const folder = (() => {
+    const cards = $$('.card', list);
+    let lx = -1, ly = -1;
+    function open(card) { cards.forEach(c => c.classList.toggle('open', c === card)); }
+    function size() {
+      if (phone.matches) return;
+      const cs = getComputedStyle(list);
+      const row = list.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+      const min = { et: 250, en: 270, ru: 290 }[lang] || 250;            // the longest bio still fits
+      let w = Math.min((list.parentElement.clientHeight - 180) * 55 / 85, row * 0.4);
+      w = Math.max(w, min);
+      list.style.setProperty('--open-w', `${w.toFixed(1)}px`);
+      list.style.setProperty('--open-h', `${(w * 85 / 55).toFixed(1)}px`);
+      list.style.setProperty('--strip', `${((row - w) / (cards.length - 1)).toFixed(1)}px`);
+      list.style.setProperty('--card-text', `${Math.min(15, Math.max(12, w * 0.03)).toFixed(1)}px`);
+    }
+    // Only a real mouse move switches cards: while the row re-arranges, cards slide under a still
+    // pointer, and the browser's synthetic moves (same coordinates) must not open those.
+    list.addEventListener('pointermove', e => {
+      if (e.pointerType !== 'mouse' || phone.matches || (e.clientX === lx && e.clientY === ly)) return;
+      lx = e.clientX; ly = e.clientY;
+      const c = e.target.closest('.card');
+      if (c && !c.classList.contains('open')) open(c);
+    });
+    list.addEventListener('click', e => { const c = e.target.closest('.card'); if (c && !phone.matches) open(c); });
+    list.addEventListener('focusin', e => { const c = e.target.closest('.card'); if (c && !phone.matches) open(c); });
+    open(cards[0]);
+    return { size };
+  })();
+  const fitAll = () => { folder.size(); fitCards(); carousel.render(); };
 
   /* ---------- "Meist" text types itself out the first time it comes into view ---------- */
   /* Quick on purpose (about 1.2s for the whole paragraph). Screen readers get the full text

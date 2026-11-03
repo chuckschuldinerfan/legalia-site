@@ -79,11 +79,11 @@ header.at-hero .home{opacity:0;pointer-events:none}
 /* The cards slide in from the right, one after another, the first time the section comes into view (main.js adds .in). */
 /* Each card starts a full screen to the right and slides into its place, one after another. */
 .team .card{opacity:0;translate:100vw 0}
-.team.in .card{opacity:1;translate:0 0;transition:opacity .35s ease,translate 1.5s cubic-bezier(.19,1,.22,1)}
-.team.in .card:nth-child(2){transition-delay:.15s}
-.team.in .card:nth-child(3){transition-delay:.3s}
-.team.in .card:nth-child(4){transition-delay:.45s}
-.team.in .card:nth-child(5){transition-delay:.6s}
+.team.in .card{opacity:1;translate:0 0;transition:opacity .35s ease,translate 1.5s cubic-bezier(.19,1,.22,1),width .7s cubic-bezier(.19,1,.22,1)}
+.team.in .card:nth-child(2){transition-delay:.15s,.15s,0s}
+.team.in .card:nth-child(3){transition-delay:.3s,.3s,0s}
+.team.in .card:nth-child(4){transition-delay:.45s,.45s,0s}
+.team.in .card:nth-child(5){transition-delay:.6s,.6s,0s}
 .cards{position:absolute;left:0;right:0;top:50%;margin:0;list-style:none;align-items:end;translate:0 -50%}
 .card{position:relative;aspect-ratio:55/85;max-height:calc(var(--hero-h) - 2 * 90px);font-size:var(--card-text);line-height:1.45;letter-spacing:.01em}
 /* Two layers, so the two motions never fight:
@@ -168,8 +168,9 @@ header.at-hero .home{opacity:0;pointer-events:none}
 @keyframes caret-blink{0%{opacity:1}50%{opacity:0}}
 
 /* ---------- about ---------- */
-/* Black, the description large at the top left (the .about rule above). */
-.meist{padding-block:110px 160px}
+/* Black, the description large at the top left (the .about rule above). At least one screen tall,
+   so at the very bottom it reaches the top edge and the grey page above never shows. */
+.meist{min-height:var(--screen);padding-block:110px 160px}
 
 /* ---------- experience: a grey page with the year ---------- */
 /* Two screens tall; its content sticks for the first, so the page stays put while the scroll turns the
@@ -200,8 +201,9 @@ main{position:relative;z-index:1}
 .reach a{width:max-content;max-width:100%;overflow-wrap:anywhere;user-select:all;-webkit-user-select:all;transition:color .2s}
 .reach a:hover{color:#fff}
 .reach a:focus-visible{outline:1px solid var(--on-ink);outline-offset:4px}
-.addr{grid-column:3;font-size:var(--step-0);line-height:1.4;color:var(--on-ink)}
-.find{grid-column:4 / span 2;justify-self:end;align-self:end;display:inline-flex;align-items:center;gap:.4em;font-size:var(--step-1);line-height:1;letter-spacing:-.01em;color:#fff}
+.place{grid-column:4 / span 2;justify-self:end;display:flex;flex-direction:column;align-items:flex-start;gap:.5em}
+.addr{font-size:var(--step-0);line-height:1.4;color:var(--on-ink)}
+.find{display:inline-flex;align-items:center;gap:.4em;font-size:var(--step-1);line-height:1;letter-spacing:-.01em;color:#fff}
 /* Icons are SVG files in assets/icons (never text symbols, which iOS can turn into emoji). */
 .find .pin{width:.9em;height:.9em;flex:none}
 .find .arrow{flex:none;width:.8em;height:.8em;margin-left:.1em;transition:transform .3s var(--ease)}
@@ -226,13 +228,30 @@ main{position:relative;z-index:1}
   .menu{grid-column:4 / span 2}
 }
 
+/* ---------- from 761px: the cards as folders ---------- */
+/* One card open, the others a strip of their left side, each one seemingly lying on top of the one
+   before it: the shadow on every card's left edge falls on its neighbour. The card's content keeps
+   the open width (--open-w) and the card only shows as much of it as its own width allows, so
+   nothing re-wraps while it opens. Sizes come from main.js (folder.size). */
+@media (min-width:761px){
+  .cards.grid{display:flex;align-items:flex-end;column-gap:0;overflow:visible;scroll-snap-type:none}
+  .cards .card{flex:none;width:var(--strip, 20%);height:var(--open-h, 60vh);max-height:none;aspect-ratio:auto;overflow:hidden;background:var(--card);
+    box-shadow:-18px 0 30px -16px rgba(0,0,0,.32),0 10px 26px -12px rgba(0,0,0,.14);transition:width .7s cubic-bezier(.19,1,.22,1)}
+  .cards .card:first-child{box-shadow:0 10px 26px -12px rgba(0,0,0,.14)}
+  .cards .card.open{width:var(--open-w, 30%)}
+  .cards .card:not(.open){cursor:pointer}
+  .cards .card .inner{right:auto;width:var(--open-w, 30%)}
+  .cards .face,.cards .card:hover .face{box-shadow:none}
+  .cards .card:hover .inner{transform:none}
+}
+
 /* ---------- phones: narrower margins, the menu stacks under itself on the right ---------- */
 @media (max-width:760px){
   :root{--gut:max(16px, env(safe-area-inset-left, 0px));--gut-r:max(16px, env(safe-area-inset-right, 0px));--hero-min:560px}
   header.grid{grid-template-columns:1fr auto}
   .menu{grid-column:2;flex-direction:column;align-items:flex-end;gap:4px}
   .logo{height:22px}
-  .reach,.addr,.find{grid-column:1 / -1;justify-self:start}
+  .reach,.place{grid-column:1 / -1;justify-self:start}
   /* Endless carousel, like legalia.ee without the arrows: one card centered, its neighbours peeking
      in at both sides, a swipe moves exactly one card and it loops in both directions. main.js
      places every card with --x (its offset from the center); vertical swipes still scroll the page.
@@ -269,6 +288,7 @@ main{position:relative;z-index:1}
 .intro.landed ~ header .menu{opacity:1;transition:opacity .8s ease}
 .intro.landed .hands{opacity:0;transition:opacity .5s ease}
 @media (prefers-reduced-motion:reduce){
+  .cards .card{transition:none}
   .intro{display:none}
   .team .card{opacity:1;translate:none}
   .team.in .card{transition:none}
