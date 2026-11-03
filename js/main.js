@@ -345,7 +345,7 @@
     seen.observe($('#cards')); // most of the row in view, so the slide is seen from its start
   }
 
-  /* ---------- the year: turns from 1992 to this year with the scroll, as the experience section comes into view ---------- */
+  /* ---------- the year: turns from 1992 to this year with the scroll, while the experience page is held on screen ---------- */
   const FROM = 1992, TO = new Date().getFullYear();
   const yearEl = $('.year');
   const strips = [...String(TO)].map(() => {
@@ -394,13 +394,12 @@
   addEventListener('resize', fitYear);
   if (document.fonts) document.fonts.ready.then(fitYear);
 
-  // 1992 while the section's top is at the bottom edge of the screen, this year once its bottom is.
-  // That point is always reachable (the contact bar only comes after it), and nothing is pinned.
+  // 1992 when the page reaches the top of the screen, this year when it is about to be released.
   const years = $('#kogemus');
   function yearFromScroll() {
     if (reduceMotion.matches) return showYear(TO);
     const r = years.getBoundingClientRect();
-    const p = Math.min(1, Math.max(0, (innerHeight - r.top) / r.height));
+    const p = Math.min(1, Math.max(0, -r.top / (r.height - innerHeight)));
     showYear(FROM + (TO - FROM) * p);
   }
   yearFromScroll();

@@ -6,10 +6,10 @@
 <title>Legalia Advokaadibüroo</title>
 <meta name="theme-color" content="#f9f9f9">
 <link rel="icon" href="assets/logo.svg" type="image/svg+xml">
-<link rel="stylesheet" href="css/style.css?v=v2-18">
-<script src="js/i18n.js?v=v2-18" defer></script>
-<script src="js/main.js?v=v2-18" defer></script>
-<script src="js/intro.js?v=v2-18" defer></script>
+<link rel="stylesheet" href="css/style.css?v=v2-19">
+<script src="js/i18n.js?v=v2-19" defer></script>
+<script src="js/main.js?v=v2-19" defer></script>
+<script src="js/intro.js?v=v2-19" defer></script>
 </head>
 <body>
 <!-- All texts live in js/i18n.js. Elements here only carry their key (data-i18n for text, data-i18n-label for aria-label). -->
@@ -34,7 +34,7 @@
     <ul class="cards grid" id="cards" role="list"></ul>
   </section>
 
-  <!-- About: the description, small and thin, at the top left. -->
+  <!-- About: the description, large, at the top left. -->
   <section class="ink meist" id="meist" aria-labelledby="meist-h">
     <div class="grid">
       <h2 class="sr-only" id="meist-h" data-i18n="about.label"></h2>
@@ -42,12 +42,12 @@
     </div>
   </section>
 
-  <!-- Experience: a short line, and the year turning from 1992 to this one as the section scrolls into view. -->
-  <section class="ink years" id="kogemus" aria-labelledby="kogemus-h">
-    <div class="grid">
-      <p class="lede" id="kogemus-h" data-i18n="experience.text"></p>
+  <!-- Experience: a grey page held on screen while the year turns from 1992 to this one, then released. -->
+  <section class="years" id="kogemus" aria-labelledby="kogemus-h">
+    <div class="pin">
+      <p class="year" aria-hidden="true"></p>
+      <div class="grid"><p class="lede" id="kogemus-h" data-i18n="experience.text"></p></div>
     </div>
-    <p class="year" aria-hidden="true"></p>
   </section>
 </main>
 
