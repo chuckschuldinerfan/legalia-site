@@ -413,18 +413,7 @@
   big.removeAttribute('class');
   $('.lockup').append(big);
 
-  /* ---------- team: the cards slide in once, the first time the section comes into view ---------- */
   const team = $('#team');
-  if (reduceMotion.matches || !('IntersectionObserver' in window)) team.classList.add('in');
-  else {
-    const seen = new IntersectionObserver(entries => {
-      if (!entries.some(e => e.isIntersecting)) return;
-      team.classList.add('in');
-      seen.disconnect();
-    }, { threshold: 0.6 });
-    seen.observe($('#cards')); // most of the row in view, so the slide is seen from its start
-    seen.observe($('#files')); // (only one of the two is shown at a time)
-  }
 
   /* ---------- the year: turns from 1992 to this year with the scroll, while the experience page is held on screen ---------- */
   const FROM = 1992, TO = new Date().getFullYear();

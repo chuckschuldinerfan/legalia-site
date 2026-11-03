@@ -9,7 +9,7 @@ window.LEGALIA_I18N = {
     header: { home: 'Legalia, avaleht', menu: 'Menüü', language: 'Keel' },
     nav: { about: 'Meist', contact: 'Kontakt' },
     hero: { label: 'Meeskond' },
-    files: { title: 'Meie meeskond', text: 'Viis inimest, kes seisavad Teie huvide eest. Iga nime taga on lühike toimik: valdkonnad, haridus ja keeled, milles saame Teid nõustada.' }, // own text, to check
+    files: { title: 'Meie meeskond', text: 'Viis inimest, kes seisavad Teie huvide eest, igaüks oma valdkonna asjatundja. Koos katame nii era- kui ka avaliku õiguse ning nõustame kliente seitsmes keeles.' }, // EN from the user; ET translation to check
     card: { flip: 'Klõpsa pööramiseks', back: 'Pööra tagasi' },
     about: {
       label: 'Meist',
@@ -63,7 +63,7 @@ window.LEGALIA_I18N = {
     header: { home: 'Legalia, home page', menu: 'Menu', language: 'Language' },          // own translation
     nav: { about: 'About', contact: 'Contact' },
     hero: { label: 'Team' },                                                              // own translation
-    files: { title: 'Our team', text: 'Five people who stand up for your interests. Behind each name is a short file: practice areas, education and the languages we can advise you in.' }, // own text
+    files: { title: 'Our team', text: 'Five people who stand up for your interests, each with their own field of expertise. Together we cover private and public law, and advise clients in seven languages.' }, // user's text (7 = the team's languages combined)
     card: { flip: 'Click to flip', back: 'Flip back' },                                  // own translation
     about: {
       label: 'About',
@@ -110,7 +110,7 @@ window.LEGALIA_I18N = {
     header: { home: 'Legalia, главная страница', menu: 'Меню', language: 'Язык' },       // own translation
     nav: { about: 'О нас', contact: 'Контакты' },
     hero: { label: 'Команда' },                                                           // own translation
-    files: { title: 'Наша команда', text: 'Пять человек, которые защищают Ваши интересы. За каждым именем — короткое досье: области практики, образование и языки, на которых мы можем Вас консультировать.' }, // own text
+    files: { title: 'Наша команда', text: 'Пять человек, которые защищают Ваши интересы, каждый — специалист в своей области. Вместе мы охватываем частное и публичное право и консультируем клиентов на семи языках.' }, // own text
     card: { flip: 'Перевернуть', back: 'Назад' },           // own translation
     about: {
       label: 'О нас',

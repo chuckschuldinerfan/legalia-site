@@ -75,15 +75,6 @@ header.at-hero .home{opacity:0;pointer-events:none}
 
 /* ---------- team: the row of cards in the vertical middle of its own screen ---------- */
 .team{position:relative;z-index:1;height:var(--hero-h);background:var(--paper)}
-/* The cards slide in from the right, one after another, the first time the section comes into view (main.js adds .in). */
-/* Each card starts a full screen to the right and slides into its place, one after another. */
-.team .card,.team .file{opacity:0;translate:100vw 0}
-.team.in .card,.team.in .file{opacity:1;translate:0 0;transition:opacity .35s ease,translate 1.5s cubic-bezier(.19,1,.22,1),width .75s cubic-bezier(.5,0,.15,1)}
-.team.in .card:nth-child(2),.team.in .file:nth-child(2){transition-delay:.15s,.15s,0s}
-.team.in .card:nth-child(3),.team.in .file:nth-child(3){transition-delay:.3s,.3s,0s}
-.team.in .card:nth-child(4),.team.in .file:nth-child(4){transition-delay:.45s,.45s,0s}
-.team.in .card:nth-child(5),.team.in .file:nth-child(5){transition-delay:.6s,.6s,0s}
-.team.in .file:nth-child(6){transition-delay:.75s,.75s,0s}
 .cards{position:absolute;left:0;right:0;top:50%;margin:0;list-style:none;align-items:end;translate:0 -50%}
 .card{position:relative;aspect-ratio:55/85;max-height:calc(var(--hero-h) - 2 * 90px);font-size:var(--card-text);line-height:1.45;letter-spacing:.01em}
 /* Two layers, so the two motions never fight:
@@ -249,17 +240,19 @@ main{position:relative;z-index:1}
   .person{background:var(--card);box-shadow:-18px 0 30px -16px rgba(0,0,0,.3),0 10px 26px -12px rgba(0,0,0,.12);cursor:pointer;outline:none}
   .person.open{cursor:auto}
   .person:focus-visible .nm{text-decoration:underline;text-underline-offset:.12em;text-decoration-thickness:1px}
-  /* The label column: 120px in the burgundy of the contact bar, with a 1px rule on its right (seen
-     only once the file is open), the name in light type on it. The name
+  /* The label column: 120px with a 1px rule on its right (seen only once the file is open); the
+     name in thin type (Helvetica Neue Thin). The name
      runs bottom to top, its end 24px from the top, 14px from the left edge. */
-  .person .in{background:linear-gradient(to right, var(--accent) 120px, var(--fg) 120px 121px, transparent 121px)}
+  .person .in::before{content:"";position:absolute;top:0;bottom:0;left:120px;width:1px;background:var(--fg)}
   .tab{position:absolute;top:24px;bottom:24px;left:16px;margin:0;writing-mode:vertical-rl;transform:rotate(180deg);text-align:end;white-space:nowrap}
-  .tab .nm{font-size:clamp(56px, 6.4vw, 92px);font-weight:400;line-height:.95;letter-spacing:-.03em;color:var(--on-ink)}
+  .tab .nm{font-size:clamp(56px, 6.4vw, 92px);font-weight:200;line-height:.95;letter-spacing:-.03em;color:var(--fg)}
   .body{position:absolute;top:24px;bottom:24px;left:146px;right:24px;display:flex;flex-direction:column;gap:.9em;font-size:var(--step-0);line-height:1.15}
   .pic{position:relative;flex:none;width:100%;aspect-ratio:7/8;max-height:45%;overflow:hidden;background:#fff}
   .pic img,.pic video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
   .pic video{opacity:0}
   .file.is-playing .pic video{opacity:1}
+  /* Piret's photo and clip are framed wider than the others; zoomed so her shoulders reach the edges like theirs. */
+  .person[data-id=piret] .pic img,.person[data-id=piret] .pic video{transform:scale(1.12);transform-origin:50% 100%}
   .body .lead{color:var(--fg)}
   .body .email{margin-top:auto;color:var(--fg)}
 }
@@ -308,8 +301,5 @@ main{position:relative;z-index:1}
 .intro.landed .hands{opacity:0;transition:opacity .5s ease}
 @media (prefers-reduced-motion:reduce){
   .file{transition:none}
-  .team .file{opacity:1;translate:none}
   .intro{display:none}
-  .team .card{opacity:1;translate:none}
-  .team.in .card{transition:none}
 }
