@@ -231,8 +231,8 @@ main{position:relative;z-index:1}
 /* A copy of the strip section on neuemontreal.com at its sizes (measured at 1440px wide: strips
    73px, the open one 349px, a 100px label column with a 1px rule; here all a quarter bigger, the row 765px tall from 100px
    down), in white instead of colours, with a shadow on each file's left edge so they read as a
-   stack. The intro takes the rest of the width on the left; one file is always open, the last
-   one pointed at. Sizes scale with the width (main.js, files.size). Phones keep the business cards. */
+   stack. The intro takes the rest of the width on the left; the files are closed at rest and the one
+   pointed at opens. Sizes scale with the width (main.js, files.size). Phones keep the business cards. */
 .files{display:none}
 @media (min-width:761px){
   .team .cards{display:none}

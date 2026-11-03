@@ -278,8 +278,8 @@
   }
   /* ---------- tablets and desktops: the team as a row of files ---------- */
   /* The intro on the left, then one file per person, at the sizes of neuemontreal.com's strips.
-     One file is always open (the first at the start, then the last one pointed at); the rest show
-     only their left edge, where the name runs upward. Each file keeps its content at the open
+     All files are closed at rest, showing only their left edge, where the name runs upward;
+     the one pointed at opens, and they all close again when the pointer leaves the row. Each file keeps its content at the open
      width and only shows as much as its own width allows, so nothing re-wraps while it opens.
      A file opens when the pointer settles on it (a fast sweep opens nothing on the way), on click
      or on keyboard focus; opening plays its clip once. */
@@ -313,8 +313,9 @@
       const p = v.play(); if (p) p.catch(() => {});
     }
     function open(f) {
-      if (!f || f.classList.contains('open')) return;
+      if (f && f.classList.contains('open')) return;
       panels.forEach(x => { if (x !== f && x.classList.contains('open')) { x.classList.remove('open'); stopClip(x); } });
+      if (!f) return;
       f.classList.add('open');
       playClip(f);
     }
@@ -347,10 +348,11 @@
       cancel(); pendFile = f;
       pend = setTimeout(() => { pendFile = null; open(f); }, 110);
     });
-    row.addEventListener('pointerleave', cancel);
+    // Mouse gone: every file closes again, unless the keyboard is inside the row.
+    row.addEventListener('pointerleave', e => { cancel(); if (e.pointerType === 'mouse' && !row.contains(document.activeElement)) open(null); });
+    row.addEventListener('focusout', e => { if (!row.contains(e.relatedTarget) && !row.matches(':hover')) open(null); });
     row.addEventListener('click', e => { const f = e.target.closest('.person'); if (f) { cancel(); open(f); } });
     row.addEventListener('focusin', e => { const f = e.target.closest('.person'); if (f) open(f); });
-    panels[0].classList.add('open');
     function label() { $$('.person', row).forEach(f => f.setAttribute('aria-label', text(`team.${f.dataset.id}.name`).value)); }
     return { size, label, stop: () => panels.forEach(stopClip) };
   })();
