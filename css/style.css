@@ -166,15 +166,19 @@ header.at-hero .home{opacity:0;pointer-events:none}
 @keyframes caret-blink{0%{opacity:1}50%{opacity:0}}
 
 /* ---------- about: description at the top, the year at the bottom ---------- */
-/* The section is taller than the screen; its content pins to the top while the extra height scrolls by, and that scroll rolls the year. */
-.years{height:calc(var(--screen) * 2)}
-.years .pin{position:sticky;top:0;height:var(--screen);display:flex;flex-direction:column;justify-content:space-between;gap:48px;padding-top:110px;overflow:clip}
-.years .grid{row-gap:20px}
-/* The year: four columns of digits 0-9 that roll like an odometer while the section scrolls in (main.js). */
-.year{display:flex;justify-content:flex-start;padding-inline:var(--gut) var(--gut-r);margin:0 0 -.09em;font-size:min(calc((100vw - 2 * var(--gut)) / 2.16), 50vh);font-weight:500;line-height:1;letter-spacing:-.04em;font-variant-numeric:tabular-nums;color:var(--on-ink)}
-.year .d{display:block;height:1em;overflow:hidden}
-.year .s{display:block;will-change:transform}
+/* One screen at least: the description small and thin at the top left, the year across the full width at the bottom.
+   main.js sizes the year so its digits run exactly from the left margin to the right one, and lines
+   up the ink of the first digit with the text above. */
+.years{min-height:var(--screen);display:flex;flex-direction:column;justify-content:space-between;gap:56px;padding-block:110px var(--gut);overflow:clip}
+.years .about{grid-column:1 / span 2;font-size:var(--step-0);font-weight:300;line-height:1.35;letter-spacing:0;max-width:30em}
+/* The year: four columns of digits 0-9 that roll like an odometer, once, the first time the section comes into view (main.js).
+   Each column is a window as tall as the digits' ink (--yh), so the year sits right on the bottom margin. */
+.year{display:flex;padding-left:var(--gut);margin:0;font-size:calc((100vw - 2 * var(--gut)) / 2.2);font-weight:400;line-height:1;font-variant-numeric:tabular-nums;color:var(--on-ink)}
+.year .d{display:block;height:calc(var(--yh, 1) * 1em);overflow:hidden}
+.year .s{display:block;margin-top:calc(var(--yt, 0) * -1em);will-change:transform}
 .year .s span{display:block;height:1em}
+@media (max-width:1279px){ .years .about{grid-column:1 / span 4} }
+@media (max-width:760px){ .years .about{grid-column:1 / -1} }
 
 /* ---------- contact: a burgundy bar under the page, uncovered at the very bottom ---------- */
 /* It sticks to the bottom edge behind everything else; main is opaque and passes over it until the page ends. */

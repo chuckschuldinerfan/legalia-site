@@ -345,7 +345,7 @@
     seen.observe(team);
   }
 
-  /* ---------- the year: rolls from 1992 to this year while the about section scrolls in ---------- */
+  /* ---------- the year: rolls from 1992 to this year once, the first time the about section comes into view ---------- */
   const FROM = 1992, TO = new Date().getFullYear();
   const yearEl = $('.year');
   const strips = [...String(TO)].map(() => {
@@ -365,17 +365,49 @@
       strip.style.transform = `translate3d(0, ${-(whole + carry)}em, 0)`;
     });
   }
-  let lastYear = -1;
-  function rollYear(top) {
-    // 0 when the section's top is a quarter of the screen from the top (the digits just in view),
-    // 1 when the pinned part has used up the section's extra height.
-    const span = about.offsetHeight - innerHeight + innerHeight * 0.25;
-    const p = reduceMotion.matches ? 1 : Math.min(1, Math.max(0, (innerHeight * 0.25 - top) / span));
-    const eased = 1 - (1 - p) ** 2;
-    const y = FROM + (TO - FROM) * eased;
-    if (y === lastYear) return;
-    lastYear = y;
-    showYear(y);
+  // Fit: the digits' ink spans exactly the page margins, and each column window is cropped to the
+  // digits' height, so the year lines up with the text above on the left and with the margins on the
+  // right and bottom. Measured with the page's own font at 100px.
+  function fitYear() {
+    yearEl.style.fontSize = '100px';
+    const cs = getComputedStyle(yearEl);
+    const ctx = document.createElement('canvas').getContext('2d');
+    ctx.font = `${cs.fontWeight} 100px ${cs.fontFamily}`;
+    const digits = String(TO);
+    const first = ctx.measureText(digits[0]), last = ctx.measureText(digits[digits.length - 1]);
+    const zero = ctx.measureText('0');
+    const left = -first.actualBoundingBoxLeft;                          // blank before the first digit's ink
+    const right = last.width - last.actualBoundingBoxRight;             // blank after the last one's
+    const advance = $$('.d', yearEl).reduce((w, d) => w + d.getBoundingClientRect().width, 0);
+    const avail = document.documentElement.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(getComputedStyle($('.years .grid')).paddingRight);
+    const size = (avail * 100) / (advance - left - right);
+    yearEl.style.fontSize = `${size}px`;
+    yearEl.style.marginLeft = `${(-left * size) / 100}px`;
+    // Vertical: where the digits' ink sits inside a 1em line box.
+    const asc = zero.fontBoundingBoxAscent, desc = zero.fontBoundingBoxDescent;
+    const baseline = (100 - (asc + desc)) / 2 + asc;                    // from the top of the line box
+    const inkTop = baseline - zero.actualBoundingBoxAscent;
+    yearEl.style.setProperty('--yt', (inkTop / 100).toFixed(4));
+    yearEl.style.setProperty('--yh', ((zero.actualBoundingBoxAscent + zero.actualBoundingBoxDescent) / 100 + 0.004).toFixed(4));
+  }
+  fitYear();
+  addEventListener('resize', fitYear);
+  if (document.fonts) document.fonts.ready.then(fitYear);
+
+  if (reduceMotion.matches || !('IntersectionObserver' in window)) showYear(TO);
+  else {
+    showYear(FROM);
+    const roll = new IntersectionObserver(entries => {
+      if (!entries.some(e => e.isIntersecting)) return;
+      roll.disconnect();
+      const t0 = performance.now(), DUR = 2600;
+      (function step(now) {
+        const p = Math.min(1, (now - t0) / DUR);
+        showYear(FROM + (TO - FROM) * (1 - (1 - p) ** 3));                // fast start, slow settle
+        if (p < 1) requestAnimationFrame(step);
+      })(t0);
+    }, { threshold: 0.35 });
+    roll.observe(yearEl);
   }
 
   /* ---------- menu: highlight what is in view; stop card videos once the team is off screen ---------- */
@@ -393,7 +425,6 @@
     header.classList.toggle('at-hero', scrollY < innerHeight * 0.5);
     if (team.getBoundingClientRect().bottom < innerHeight * 0.25) stopAll();
     if (aboutTop < mid) typer.start();
-    rollYear(aboutTop);
   }
   addEventListener('scroll', () => { if (!ticking) { ticking = true; requestAnimationFrame(onScroll); } }, { passive: true });
   addEventListener('resize', onScroll);

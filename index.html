@@ -6,10 +6,10 @@
 <title>Legalia Advokaadibüroo</title>
 <meta name="theme-color" content="#f9f9f9">
 <link rel="icon" href="assets/logo.svg" type="image/svg+xml">
-<link rel="stylesheet" href="css/style.css?v=v2-15">
-<script src="js/i18n.js?v=v2-15" defer></script>
-<script src="js/main.js?v=v2-15" defer></script>
-<script src="js/intro.js?v=v2-15" defer></script>
+<link rel="stylesheet" href="css/style.css?v=v2-16">
+<script src="js/i18n.js?v=v2-16" defer></script>
+<script src="js/main.js?v=v2-16" defer></script>
+<script src="js/intro.js?v=v2-16" defer></script>
 </head>
 <body>
 <!-- All texts live in js/i18n.js. Elements here only carry their key (data-i18n for text, data-i18n-label for aria-label). -->
@@ -36,13 +36,11 @@
 
   <!-- About: the description small at the top, the year rolling up from 1992 at the bottom. -->
   <section class="ink years" id="meist" aria-labelledby="meist-h">
-    <div class="pin"><!-- holds the screen while the year rolls -->
-      <div class="grid">
-        <h2 class="label small" id="meist-h" data-i18n="about.label"></h2>
-        <p class="about" data-i18n="about.text"></p>
-      </div>
-      <p class="year" aria-hidden="true"></p>
+    <div class="grid">
+      <h2 class="sr-only" id="meist-h" data-i18n="about.label"></h2>
+      <p class="about" data-i18n="about.text"></p>
     </div>
+    <p class="year" aria-hidden="true"></p>
   </section>
 </main>
 
