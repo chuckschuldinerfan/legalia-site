@@ -1,104 +1,77 @@
 /* Opening sequence.
-   1. The handshake clip plays once (2s) and stops on its last frame, where the hands are joined.
-   2. On the joined hands, in the middle of the screen, the Legalia mark draws itself in white,
-      starting from its two open ends at once and meeting in the middle of the §.
-   3. The clip and the mark fade together into the page background; the header and the cards come in.
-   Any click, key or scroll skips straight to the end. With reduced motion the CSS hides it. */
+   Handshake clips (assets/video/hands.mp4, five cuts of 0.8s) play inside the Legalia mark, like a
+   clipping mask. The mark starts so large that one of its strokes fills the screen, then zooms out
+   into the logo in the middle of the first screen. The name fades in beside it, the clips fade into
+   the solid mark, and the menu comes in. Any click, key or scroll skips to the end.
+   With reduced motion the CSS hides it. */
 (() => {
   'use strict';
   const intro = document.querySelector('.intro');
   if (!intro) return;
+  const hands = intro.querySelector('.hands');
   const video = intro.querySelector('video');
-  const logo = document.querySelector('header .logo');
-  if (matchMedia('(prefers-reduced-motion: reduce)').matches || !logo) { intro.remove(); return; }
+  const target = document.querySelector('.lockup svg');
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches || !target) { intro.remove(); return; }
 
-  // Where the hands are joined in the last frame, in clip pixels (1440 x 2730), and how tall the mark is there.
-  const CLIP = { w: 1440, h: 2730, x: 667, y: 1480, mark: 440 };
-  const NS = 'http://www.w3.org/2000/svg';
-
-  /* The mark is the left part of the header logo (viewBox 0 0 141.6 136). It is one stroke with two
-     open ends: top left (end of the left bracket's top arm) and bottom right, and it looks the same
-     turned 180deg around its centre. PEN is the centre line from the top-left end: left bracket,
-     bottom bar, lower curve of the §, its lower diagonal and left loop. The second pen is the same
-     line turned 180deg. The pens are wider than the mark and drawn through the mark's exact shape
-     used as a mask, so the edges stay the logo's own. HALF is the pen's own half of the mark: each pen
-     only shows its half, so neither shows slivers of the other's loops ahead of time. The halves
-     overlap by a hair so no seam shows where they meet. */
-  const PEN = 'M37.09 8.81H6.87V128.46H73C86 128.5 96.8 117.6 92 104.3C86.5 97.5 78.5 89.5 70 84.7C61 79.6 50 76 40 67.5C33 61.5 30.5 58 30.8 52.4C31 45 36 40.5 44 39.5C48 39.5 52 42 55 45';
-  const HALF = 'M-5 -5H38.4V20L42.44 33.67L51.94 46.93L90.38 89.51L99.88 102.77L103.92 117.24V142.24H-5Z';
-  const CENTRE = '70.76 68.62';
-
-  const mark = document.createElementNS(NS, 'svg');
-  mark.setAttribute('viewBox', '0 0 141.6 136');
-  mark.setAttribute('class', 'intro-mark');
-  const shape = logo.querySelector('path').cloneNode(true);
-  shape.setAttribute('fill', 'currentColor');
-  const pen = `<g clip-path="url(#intro-half)"><path d="${PEN}" pathLength="1"/></g>`;
-  mark.innerHTML = '<defs><mask id="intro-shape" maskUnits="userSpaceOnUse" x="0" y="0" width="141.6" height="136"></mask>' +
-    `<clipPath id="intro-half"><path d="${HALF}"/></clipPath></defs>` +
-    `<g class="pens" mask="url(#intro-shape)" fill="none" stroke="currentColor" stroke-width="18" stroke-linejoin="miter">` +
-    `${pen}<g transform="rotate(180 ${CENTRE})">${pen}</g></g>`;
-  const maskShape = shape.cloneNode(true);
-  maskShape.setAttribute('fill', '#fff');
-  mark.querySelector('mask').appendChild(maskShape);
-  shape.style.opacity = 0; // the finished mark, shown once both pens are done
-  mark.appendChild(shape);
-  const pens = [...mark.querySelectorAll('.pens path')];
-  pens.forEach(p => { p.style.strokeDasharray = '1 1'; p.style.strokeDashoffset = '1'; });
-  intro.appendChild(mark);
-
-  // Lay the clip out so the joined hands sit in the middle of the screen and the clip still covers it.
-  function layout() {
-    const vw = innerWidth, vh = innerHeight;
-    const scale = Math.max(vw / (2 * CLIP.x), vw / (2 * (CLIP.w - CLIP.x)), vh / (2 * CLIP.y), vh / (2 * (CLIP.h - CLIP.y)));
-    video.style.width = CLIP.w + 'px';
-    video.style.height = CLIP.h + 'px';
-    video.style.transform = `translate(${vw / 2 - CLIP.x * scale}px, ${vh / 2 - CLIP.y * scale}px) scale(${scale})`;
-    const h = Math.min(CLIP.mark * scale, vh * .55, vw * .6);
-    const w = h * 141.6 / 136;
-    mark.style.width = w + 'px';
-    mark.style.height = h + 'px';
-    mark.style.transform = `translate(${vw / 2 - w / 2}px, ${vh / 2 - h / 2}px)`;
-  }
-  layout();
-  addEventListener('resize', layout);
-
-  let stage = 0; // 0 playing, 1 drawing, 2 ending
-  const wait = ms => new Promise(r => setTimeout(r, ms));
-
-  async function draw() {
-    if (stage) return;
-    stage = 1;
-    video.pause();
-    mark.style.opacity = 1;
-    await Promise.all(pens.map(p => p.animate([{ strokeDashoffset: 1 }, { strokeDashoffset: 0 }],
-      { duration: 1700, easing: 'cubic-bezier(.45,0,.25,1)', fill: 'forwards' }).finished));
-    shape.style.opacity = 1; // swap the two drawn halves for the one solid mark
-    mark.querySelector('.pens').remove();
-    if (stage > 1) return;
-    await wait(450);
-    end();
+  /* The mark is the first path of the logo, in logo units (viewBox 0 0 730 136). Its commands are
+     all absolute (M C L H V Z), so moving and scaling it is a matter of mapping its numbers. */
+  const d = target.querySelector('path').getAttribute('d');
+  const parts = d.match(/[MCLHVZ]|-?\d*\.?\d+(?:e-?\d+)?/gi);
+  function placed(s, tx, ty) {
+    let out = '', cmd = '', n = 0;
+    for (const t of parts) {
+      if (/[A-Z]/i.test(t)) { cmd = t.toUpperCase(); n = 0; out += cmd; continue; }
+      const v = +t;
+      const isY = cmd === 'V' || (cmd !== 'H' && n % 2 === 1);
+      out += (isY ? v * s + ty : v * s + tx).toFixed(1) + ' ';
+      n++;
+    }
+    return `path(evenodd, "${out}")`;
   }
 
-  async function end(instant) {
-    if (stage >= 2) return;
-    stage = 2;
-    removeEventListener('resize', layout);
-    if (!instant) await intro.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 900, easing: 'ease-in-out', fill: 'forwards' }).finished;
-    intro.classList.add('landed'); // header and cards come in
-    intro.style.visibility = 'hidden';
-    video.remove();
-    await wait(1300);
-    intro.remove();
+  // Zoom anchor: the middle of the left bracket's upright (13.7 units wide), so at the start the
+  // screen is entirely inside the stroke and the clip fills it.
+  const FOCUS = { x: 6.85, y: 68.6 }, STROKE = 13.7;
+  const HOLD = 450, ZOOM = 3000, NAME_AT = 2900, END_AT = 3700;
+  const ease = t => (t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2);
+
+  let t0 = 0, raf = 0, finished = false;
+  function frame(now) {
+    if (finished) return;
+    if (!t0) t0 = now;
+    const t = now - t0;
+    const r = target.getBoundingClientRect();
+    const s1 = r.width / 730;                                        // logo units -> px at the end
+    const fx1 = r.left + FOCUS.x * s1, fy1 = r.top + FOCUS.y * s1;   // where the anchor ends up
+    const s0 = (Math.hypot(innerWidth, innerHeight) * 1.15) / STROKE;
+    const p = ease(Math.min(1, Math.max(0, (t - HOLD) / ZOOM)));
+    const s = Math.exp(Math.log(s0) + (Math.log(s1) - Math.log(s0)) * p); // even zoom speed
+    const fx = innerWidth / 2 + (fx1 - innerWidth / 2) * p;
+    const fy = innerHeight / 2 + (fy1 - innerHeight / 2) * p;
+    hands.style.clipPath = placed(s, fx - FOCUS.x * s, fy - FOCUS.y * s);
+    if (t >= NAME_AT) intro.classList.add('named');
+    if (t >= END_AT) return finish();
+    raf = requestAnimationFrame(frame);
   }
 
-  // Skip: any intent to use the page ends the opening at once.
-  const skip = () => { if (stage < 2) end(true); };
-  ['pointerdown', 'keydown', 'wheel', 'touchstart'].forEach(t => addEventListener(t, skip, { once: true, passive: true }));
+  function finish() {
+    if (finished) return;
+    finished = true;
+    cancelAnimationFrame(raf);
+    intro.classList.add('named', 'landed');
+    ['pointerdown', 'keydown', 'wheel', 'touchstart'].forEach(e => removeEventListener(e, finish));
+    setTimeout(() => intro.remove(), 700);
+  }
 
-  video.addEventListener('ended', draw);
-  // If the clip cannot play (blocked autoplay, slow network), the mark is drawn in black on the page instead.
-  const noClip = () => { video.style.opacity = 0; mark.style.color = '#060606'; draw(); };
-  video.play().catch(noClip);
-  setTimeout(() => { if (!stage && video.currentTime === 0) noClip(); }, 2500);
+  ['pointerdown', 'keydown', 'wheel', 'touchstart'].forEach(e => addEventListener(e, finish, { passive: true }));
+  if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+  scrollTo(0, 0);
+
+  // Start when the clip actually plays; if it can't (blocked autoplay, slow network), skip to the logo.
+  const go = () => { if (!t0 && !finished) raf = requestAnimationFrame(frame); };
+  hands.style.clipPath = 'inset(50%)';
+  video.addEventListener('playing', go, { once: true });
+  const tried = video.play();
+  if (tried && tried.catch) tried.catch(finish);
+  setTimeout(() => { if (!t0) finish(); }, 2500);
 })();

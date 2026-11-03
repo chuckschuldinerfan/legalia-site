@@ -65,11 +65,23 @@ header.on-accent .menu a:hover,header.on-accent .menu button:hover,header.on-acc
 .menu a[aria-current="true"],.menu button[aria-pressed="true"]{color:#fff}
 .home:focus-visible,.menu a:focus-visible,.menu button:focus-visible{outline:1px solid #fff;outline-offset:3px}
 
-/* ---------- hero: stays pinned while the dark sections slide up over it ---------- */
-/* When the window is shorter than the hero, the negative top lets it scroll until the cards
-   reach the bottom edge, and only then pins it. */
-.hero{position:sticky;top:min(0px, calc(var(--screen) - var(--hero-h)));z-index:0;height:var(--hero-h);background:var(--paper)}
-/* The row sits in the vertical middle of the first screen. */
+/* ---------- hero: the logo in the middle of the first screen; it stays pinned while the team slides up over it ---------- */
+.hero{position:sticky;top:0;z-index:0;height:var(--screen);display:grid;place-items:center;background:var(--paper);color:var(--fg)}
+.lockup{width:clamp(240px, 46vw, 760px)}
+.lockup svg{display:block;width:100%;height:auto}
+/* The header logo hides while the big one is on screen. */
+header .home{transition:opacity .4s}
+header.at-hero .home{opacity:0;pointer-events:none}
+
+/* ---------- team: the row of cards in the vertical middle of its own screen ---------- */
+.team{position:relative;z-index:1;height:var(--hero-h);background:var(--paper)}
+/* The cards slide in from the right, one after another, the first time the section comes into view (main.js adds .in). */
+.team .card{opacity:0;translate:45vw 0}
+.team.in .card{opacity:1;translate:0 0;transition:opacity .5s ease,translate 1.2s cubic-bezier(.16,1,.3,1)}
+.team.in .card:nth-child(2){transition-delay:.09s}
+.team.in .card:nth-child(3){transition-delay:.18s}
+.team.in .card:nth-child(4){transition-delay:.27s}
+.team.in .card:nth-child(5){transition-delay:.36s}
 .cards{position:absolute;left:0;right:0;top:50%;margin:0;list-style:none;align-items:end;translate:0 -50%}
 .card{position:relative;aspect-ratio:55/85;max-height:calc(var(--hero-h) - 2 * 90px);font-size:var(--card-text);line-height:1.45;letter-spacing:.01em}
 /* Two layers, so the two motions never fight:
@@ -153,23 +165,36 @@ header.on-accent .menu a:hover,header.on-accent .menu button:hover,header.on-acc
 .about .caret.blink::after{animation:caret-blink 1.06s steps(1) infinite}
 @keyframes caret-blink{0%{opacity:1}50%{opacity:0}}
 
-/* ---------- about + contact: one burgundy screen. About text, then phone and email, address and map link at the bottom ---------- */
-.contact{z-index:2;background:var(--accent);--on-ink-mute:var(--on-accent-mute);min-height:var(--screen);display:flex;flex-direction:column;padding-block:110px calc(26px + env(safe-area-inset-bottom, 0px))}
-.contact .grid{row-gap:28px}
-.reach-row{margin-top:40px}
-.reach{grid-column:1 / span 5;display:flex;flex-direction:column;gap:.15em;font-size:var(--step-1);line-height:1.2;letter-spacing:-.01em}
+/* ---------- about: description at the top, the year at the bottom ---------- */
+/* The section is taller than the screen; its content pins to the top while the extra height scrolls by, and that scroll rolls the year. */
+.years{height:calc(var(--screen) * 2)}
+.years .pin{position:sticky;top:0;height:var(--screen);display:flex;flex-direction:column;justify-content:space-between;gap:48px;padding-top:110px;overflow:clip}
+.years .grid{row-gap:20px}
+/* The year: four columns of digits 0-9 that roll like an odometer while the section scrolls in (main.js). */
+.year{display:flex;justify-content:flex-start;padding-inline:var(--gut) var(--gut-r);margin:0 0 -.09em;font-size:min(calc((100vw - 2 * var(--gut)) / 2.16), 50vh);font-weight:500;line-height:1;letter-spacing:-.04em;font-variant-numeric:tabular-nums;color:var(--on-ink)}
+.year .d{display:block;height:1em;overflow:hidden}
+.year .s{display:block;will-change:transform}
+.year .s span{display:block;height:1em}
+
+/* ---------- contact: a burgundy bar under the page, uncovered at the very bottom ---------- */
+/* It sticks to the bottom edge behind everything else; main is opaque and passes over it until the page ends. */
+main{position:relative;z-index:1}
+.bar{position:sticky;bottom:0;z-index:0;background:var(--accent);color:var(--on-ink);--on-ink-mute:var(--on-accent-mute);padding-block:32px calc(18px + env(safe-area-inset-bottom, 0px))}
+.bar ::selection{color:var(--accent);background:var(--on-ink)}
+.bar .grid{row-gap:20px;align-items:end}
+.bar .label{grid-column:1 / -1}
+.reach{grid-column:1 / span 2;display:flex;flex-direction:column;gap:.15em;font-size:var(--step-1);line-height:1.2;letter-spacing:-.01em}
 .reach a{width:max-content;max-width:100%;overflow-wrap:anywhere;user-select:all;-webkit-user-select:all;transition:color .2s}
 .reach a:hover{color:#fff}
 .reach a:focus-visible{outline:1px solid var(--on-ink);outline-offset:4px}
-.place{margin-top:auto;padding-top:40px;align-items:end;row-gap:28px}
-.addr{grid-column:1 / span 2;font-size:var(--step-0);line-height:1.4;color:var(--on-ink)}
-.find{grid-column:4 / span 2;justify-self:end;display:inline-flex;align-items:center;gap:.4em;font-size:var(--step-1);line-height:1;letter-spacing:-.01em;color:#fff}
+.addr{grid-column:3;font-size:var(--step-0);line-height:1.4;color:var(--on-ink)}
+.find{grid-column:4 / span 2;justify-self:end;align-self:end;display:inline-flex;align-items:center;gap:.4em;font-size:var(--step-1);line-height:1;letter-spacing:-.01em;color:#fff}
 /* Icons are SVG files in assets/icons (never text symbols, which iOS can turn into emoji). */
 .find .pin{width:.9em;height:.9em;flex:none}
 .find .arrow{flex:none;width:.8em;height:.8em;margin-left:.1em;transition:transform .3s var(--ease)}
 .find:hover .arrow{transform:translate(.15em,-.15em)}
 .find:focus-visible{outline:1px solid var(--on-ink);outline-offset:6px}
-.foot{margin-top:32px;color:var(--on-ink-mute)}
+.foot{margin-top:24px;color:var(--on-ink-mute)}
 .foot p{grid-column:1 / -1;display:flex;align-items:center;gap:.25em}
 .foot .copy{width:1.05em;height:1.05em;flex:none}
 
@@ -194,13 +219,13 @@ header.on-accent .menu a:hover,header.on-accent .menu button:hover,header.on-acc
   header.grid{grid-template-columns:1fr auto}
   .menu{grid-column:2;flex-direction:column;align-items:flex-end;gap:4px}
   .logo{height:22px}
-  .addr,.find{grid-column:1 / -1;justify-self:start}
+  .reach,.addr,.find{grid-column:1 / -1;justify-self:start}
   /* Endless carousel, like legalia.ee without the arrows: one card centered, its neighbours peeking
      in at both sides, a swipe moves exactly one card and it loops in both directions. main.js
      places every card with --x (its offset from the center); vertical swipes still scroll the page.
      78% of the screen leaves room for the flip button beside the name. */
   :root{--card-w:min(78vw, 320px)}
-  .hero{overflow-x:clip}
+  .team{overflow-x:clip}
   .cards.grid{display:block;height:calc(var(--card-w) * 85 / 55);padding:0;overflow:visible;scroll-snap-type:none;touch-action:pan-y}
   .cards .card{position:absolute;left:50%;bottom:0;width:var(--card-w);max-height:none;margin-left:calc(var(--card-w) / -2);transform:translate3d(var(--x, 0px), 0, 0)}
   .cards.dragging{-webkit-user-select:none;user-select:none}
@@ -219,16 +244,19 @@ header.on-accent .menu a:hover,header.on-accent .menu button:hover,header.on-acc
 }
 
 /* ---------- opening ---------- */
-/* Until the opening ends, the header and the cards wait out of sight. */
-.intro{position:fixed;inset:0;z-index:60;overflow:hidden;pointer-events:none}
-.intro-video{position:absolute;left:0;top:0;max-width:none;transform-origin:0 0;background:var(--paper)}
-.intro-mark{position:absolute;left:0;top:0;color:#fff;opacity:0;overflow:visible}
-.intro ~ header .home,.intro ~ header .menu{opacity:0}
-.intro ~ main .hero .card{opacity:0;translate:0 28px}
-.intro.landed ~ header .home,.intro.landed ~ header .menu{opacity:1;transition:opacity .8s ease}
-.intro.landed ~ main .hero .card{opacity:1;translate:0 0;transition:opacity .7s ease,translate .9s var(--ease)}
-.intro.landed ~ main .hero .card:nth-child(2){transition-delay:.07s}
-.intro.landed ~ main .hero .card:nth-child(3){transition-delay:.14s}
-.intro.landed ~ main .hero .card:nth-child(4){transition-delay:.21s}
-.intro.landed ~ main .hero .card:nth-child(5){transition-delay:.28s}
-@media (prefers-reduced-motion:reduce){ .intro{display:none} }
+/* Handshake clips play inside the Legalia mark (a clip-path set by intro.js every frame) while it
+   zooms out into the logo in the middle of the first screen. Until then the logo and the menu wait. */
+.intro{position:fixed;inset:0;z-index:60;pointer-events:none}
+.hands{position:absolute;inset:0;background:var(--ink)}
+.hands video{width:100%;height:100%;object-fit:cover;display:block}
+.intro ~ main .lockup path{opacity:0}
+.intro ~ header .menu{opacity:0}
+.intro.named ~ main .lockup path:not(:first-child){opacity:1;transition:opacity .7s ease}
+.intro.landed ~ main .lockup path{opacity:1;transition:opacity .5s ease}
+.intro.landed ~ header .menu{opacity:1;transition:opacity .8s ease}
+.intro.landed .hands{opacity:0;transition:opacity .5s ease}
+@media (prefers-reduced-motion:reduce){
+  .intro{display:none}
+  .team .card{opacity:1;translate:none}
+  .team.in .card{transition:none}
+}

@@ -276,15 +276,7 @@
       while (overflows() && size > 8) { size -= 0.5; bio.style.fontSize = `${size}px`; }
     });
   }
-  // "Meist" and "Kontakt" share one screen: the about text starts at step 2 of the type scale and
-  // steps down in half pixels only if the page would grow taller than the screen (small phones, longer translations).
-  function fitAbout() {
-    const sec = $('#meist'), text = $('.about', sec);
-    text.style.fontSize = '';
-    let size = parseFloat(getComputedStyle(text).fontSize);
-    while (sec.offsetHeight > innerHeight + 1 && size > 14) { size -= 0.5; text.style.fontSize = `${size}px`; }
-  }
-  const fitAll = () => { fitCards(); fitAbout(); carousel.render(); };
+  const fitAll = () => { fitCards(); carousel.render(); };
 
   /* ---------- "Meist" text types itself out the first time it comes into view ---------- */
   /* Quick on purpose (about 1.2s for the whole paragraph). Screen readers get the full text
@@ -336,32 +328,82 @@
   document.addEventListener('visibilitychange', () => { if (document.hidden) stopAll(); });
   reduceMotion.addEventListener('change', () => { if (reduceMotion.matches) stopAll(); });
 
-  /* ---------- menu: highlight the section in view; stop videos once the hero is covered ---------- */
+  /* ---------- the logo in the middle of the first screen: a copy of the header logo ---------- */
+  const big = $('header .logo').cloneNode(true);
+  big.removeAttribute('class');
+  $('.lockup').append(big);
 
-  const about = $('#meist'); // the about + contact page
+  /* ---------- team: the cards slide in once, the first time the section comes into view ---------- */
+  const team = $('#team');
+  if (reduceMotion.matches || !('IntersectionObserver' in window)) team.classList.add('in');
+  else {
+    const seen = new IntersectionObserver(entries => {
+      if (!entries.some(e => e.isIntersecting)) return;
+      team.classList.add('in');
+      seen.disconnect();
+    }, { threshold: 0.3 });
+    seen.observe(team);
+  }
+
+  /* ---------- the year: rolls from 1992 to this year while the about section scrolls in ---------- */
+  const FROM = 1992, TO = new Date().getFullYear();
+  const yearEl = $('.year');
+  const strips = [...String(TO)].map(() => {
+    const d = document.createElement('span'), strip = document.createElement('span');
+    d.className = 'd'; strip.className = 's';
+    for (let i = 0; i <= 10; i++) strip.append(Object.assign(document.createElement('span'), { textContent: i % 10 }));
+    d.append(strip); yearEl.append(d);
+    return strip;
+  });
+  yearEl.setAttribute('aria-label', String(TO));
+  // Odometer: each digit turns continuously; a higher digit only moves while every lower one passes 9 -> 0.
+  function showYear(y) {
+    strips.forEach((strip, i) => {
+      const unit = 10 ** (strips.length - 1 - i);
+      const whole = Math.floor(y / unit) % 10;
+      const carry = unit === 1 ? y % 1 : Math.max(0, (y % unit) - (unit - 1));
+      strip.style.transform = `translate3d(0, ${-(whole + carry)}em, 0)`;
+    });
+  }
+  let lastYear = -1;
+  function rollYear(top) {
+    // 0 when the section's top is a quarter of the screen from the top (the digits just in view),
+    // 1 when the pinned part has used up the section's extra height.
+    const span = about.offsetHeight - innerHeight + innerHeight * 0.25;
+    const p = reduceMotion.matches ? 1 : Math.min(1, Math.max(0, (innerHeight * 0.25 - top) / span));
+    const eased = 1 - (1 - p) ** 2;
+    const y = FROM + (TO - FROM) * eased;
+    if (y === lastYear) return;
+    lastYear = y;
+    showYear(y);
+  }
+
+  /* ---------- menu: highlight what is in view; stop card videos once the team is off screen ---------- */
+  const about = $('#meist');
   const header = $('header');
   const navLinks = $$('[data-nav]');
   let ticking = false;
   function onScroll() {
     ticking = false;
     const mid = innerHeight * 0.5;
-    // Both menu items live on the last page, so both light up there.
-    const onPage = about.getBoundingClientRect().top < mid;
-    navLinks.forEach(a => (onPage ? a.setAttribute('aria-current', 'true') : a.removeAttribute('aria-current')));
-    // Plain white from the moment the burgundy reaches the header's bottom edge: an inverted header
-    // over it would flash blue-green. Over the black section above, plain white looks the same.
-    header.classList.toggle('on-accent', about.getBoundingClientRect().top < header.getBoundingClientRect().bottom);
     const aboutTop = about.getBoundingClientRect().top;
-    if (aboutTop < innerHeight * 0.25) stopAll();
-    if (aboutTop < innerHeight * 0.35) typer.start(); // starts as the text slides into view
+    const atBottom = scrollY + innerHeight >= document.documentElement.scrollHeight - 2;
+    const cur = atBottom ? 'kontakt' : aboutTop < mid ? 'meist' : null;
+    navLinks.forEach(a => (a.dataset.nav === cur ? a.setAttribute('aria-current', 'true') : a.removeAttribute('aria-current')));
+    header.classList.toggle('at-hero', scrollY < innerHeight * 0.5);
+    if (team.getBoundingClientRect().bottom < innerHeight * 0.25) stopAll();
+    if (aboutTop < mid) typer.start();
+    rollYear(aboutTop);
   }
   addEventListener('scroll', () => { if (!ticking) { ticking = true; requestAnimationFrame(onScroll); } }, { passive: true });
+  addEventListener('resize', onScroll);
+  onScroll();
 
-  /* Both menu links scroll to the last page. Plain anchors can't: the hero is pinned, so the
-     browser's idea of where the page starts is off. */
+  /* Menu links: "Meist" scrolls to the about section, "Kontakt" to the very bottom, where the bar is. */
+  const target = { meist: () => about.getBoundingClientRect().top + scrollY, kontakt: () => document.documentElement.scrollHeight };
   navLinks.forEach(a => a.addEventListener('click', e => {
     e.preventDefault();
-    scrollTo({ top: $('main').offsetTop + $('.hero').offsetHeight, behavior: reduceMotion.matches ? 'auto' : 'smooth' });
+    scrollTo({ top: target[a.dataset.nav](), behavior: reduceMotion.matches ? 'auto' : 'smooth' });
   }));
 
   /* ---------- smooth scrolling ---------- */
