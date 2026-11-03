@@ -318,13 +318,13 @@
       f.classList.add('open');
       playClip(f);
     }
-    // Sizes: neuemontreal.com's at 1440px wide (strip 73px, open 349px), scaled with the width;
-    // the open file never gets narrower than its bio needs.
+    // Sizes: neuemontreal.com's at 1440px wide (strip 73px, open 349px) made a quarter bigger
+    // (user asked), scaled with the width; the open file never gets narrower than its bio needs.
     function size() {
       if (phone.matches) return;
       const w = row.clientWidth;
-      row.style.setProperty('--strip', `${Math.max(56, (w * 73) / 1440).toFixed(1)}px`);
-      row.style.setProperty('--open', `${Math.max(330, (w * 349) / 1440).toFixed(1)}px`);
+      row.style.setProperty('--strip', `${Math.max(64, (w * 91) / 1440).toFixed(1)}px`);
+      row.style.setProperty('--open', `${Math.max(360, (w * 436) / 1440).toFixed(1)}px`);
       // A bio that would run into the email shrinks in half-pixel steps.
       $$('.person', row).forEach(f => {
         const body = $('.body', f), mail = $('.email', f);
