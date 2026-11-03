@@ -6,10 +6,10 @@
 <title>Legalia Advokaadibüroo</title>
 <meta name="theme-color" content="#f9f9f9">
 <link rel="icon" href="assets/logo.svg" type="image/svg+xml">
-<link rel="stylesheet" href="css/style.css?v=v2-23">
-<script src="js/i18n.js?v=v2-23" defer></script>
-<script src="js/main.js?v=v2-23" defer></script>
-<script src="js/intro.js?v=v2-23" defer></script>
+<link rel="stylesheet" href="css/style.css?v=v2-24">
+<script src="js/i18n.js?v=v2-24" defer></script>
+<script src="js/main.js?v=v2-24" defer></script>
+<script src="js/intro.js?v=v2-24" defer></script>
 </head>
 <body>
 <!-- All texts live in js/i18n.js. Elements here only carry their key (data-i18n for text, data-i18n-label for aria-label). -->
@@ -32,6 +32,16 @@
   <!-- The team: the cards slide in once, the first time the section comes into view. -->
   <section class="team" id="team" data-i18n-label="hero.label">
     <ul class="cards grid" id="cards" role="list"></ul>
+    <!-- Tablets and desktops: the team as a row of files. The intro is open at first; pointing at a
+         name opens that person's file (main.js builds the five from #file-tpl). -->
+    <div class="files" id="files">
+      <section class="file opener open" aria-labelledby="files-h">
+        <div class="in">
+          <h2 class="files-h" id="files-h" data-i18n="files.title"></h2>
+          <p class="files-p" data-i18n="files.text"></p>
+        </div>
+      </section>
+    </div>
   </section>
 
   <!-- Experience: a light page held on screen while the year turns from 1992 to this one, then released. -->
@@ -72,6 +82,26 @@
     <p><img class="copy" src="assets/icons/copyright.svg" alt="©" width="24" height="24"> <span id="year">2026</span> Legalia</p>
   </div>
 </footer>
+
+<!-- One person's file (tablets and desktops): the name runs up the left edge; opened, the photo
+     (and its clip) sits at the top with the bio under it. -->
+<template id="file-tpl">
+  <article class="file person" tabindex="0">
+    <div class="in">
+      <p class="tab"><span class="nm" data-k="name"></span><span class="g" data-k="title"></span></p>
+      <div class="body">
+        <div class="pic">
+          <picture><source type="image/webp"><img alt="" width="700" height="800" decoding="async" loading="lazy"></picture>
+          <video muted playsinline disablepictureinpicture preload="none" aria-hidden="true" tabindex="-1"></video>
+        </div>
+        <p class="lead" data-k="spec"></p>
+        <p class="g" data-k="cred"></p>
+        <p class="g" data-k="lang"></p>
+        <p class="email"><span data-k="email"></span></p>
+      </div>
+    </div>
+  </article>
+</template>
 
 <!-- One business card; js/main.js clones it per team member and fills the data-k fields. -->
 <template id="card-tpl">

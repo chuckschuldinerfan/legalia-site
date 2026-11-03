@@ -11,7 +11,6 @@
   const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
 
   const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)');
-  const wait = ms => new Promise(r => setTimeout(r, ms));
   let lang = 'et';
 
   /* ---------- texts ---------- */
@@ -217,9 +216,6 @@
       if (on) video.hidden = true; // and is gone entirely on the text side
       front.setAttribute('aria-hidden', String(on));
       back.setAttribute('aria-hidden', String(!on));
-      // Tablets and desktops: the card first comes out of the deck, above the others, and turns there.
-      const deck = !phone.matches && !reduceMotion.matches;
-      if (on && deck) { card.classList.add('out'); await wait(380); }
       card.classList.add('flipping');
       card.classList.toggle('flipped', on);
       if (!reduceMotion.matches) {
@@ -233,11 +229,6 @@
         card.classList.remove(cls);
       }
       card.classList.remove('flipping');
-      if (!on && card.classList.contains('out')) {           // and after turning back it goes back into the deck
-        card.classList.add('returning'); card.classList.remove('out');
-        await wait(450);
-        card.classList.remove('returning');
-      }
       if (!on) video.hidden = false; // the photo side is fully facing the viewer again
       // Keyboard users keep their place: focus moves to the button on the side now showing.
       if (hadFocus) (on ? backBtn : frontBtn).focus({ preventScroll: true });
@@ -246,7 +237,6 @@
     }
 
     // Only the buttons flip the card, so the rest of it (names, emails) can be selected and copied.
-    card.unflip = () => setFlipped(false);
     frontBtn.addEventListener('click', () => setFlipped(true));
     backBtn.addEventListener('click', () => setFlipped(false));
     card.addEventListener('pointerenter', e => {
@@ -286,61 +276,85 @@
       while (overflows() && size > 8) { size -= 0.5; bio.style.fontSize = `${size}px`; }
     });
   }
-  /* ---------- tablets and desktops: the cards as folders ---------- */
-  /* One card is open at full width; the others show only a strip of their left side, as if each
-     one lay on top of the one before it (the shadow on each card's left edge does the rest).
-     The last card is the top of the deck: its left edge stays put whichever other card opens
-     (it only moves when it opens itself), so it never slides under the pointer.
-     At rest (standby) no card is open: the last one shows a strip, the other four share the rest.
-     A card opens when the pointer settles on it (a fast sweep across the row opens nothing on the
-     way), or on click or keyboard focus. While a card is flipped out of the deck, the others wait. */
-  const folder = (() => {
-    const cards = $$('.card', list);
-    let lx = -1, ly = -1, pend = 0, pendCard = null;
-    const out = () => cards.find(c => c.classList.contains('out'));
-    function open(card) {
-      cards.forEach(c => c.classList.toggle('open', c === card));
-      list.classList.toggle('opened', !!card);
+  /* ---------- tablets and desktops: the team as a row of files ---------- */
+  /* Six panels side by side: the intro and one file per person. One is open (4.8 times as wide as
+     the others, as on neuemontreal.com); the rest show only their left edge, where the name runs
+     upward. Each panel keeps its content at the open width and only shows as much as its own width
+     allows, so nothing re-wraps while it opens. The intro is open at first and again whenever the
+     pointer leaves the row. A file opens when the pointer settles on it (a fast sweep opens
+     nothing on the way), on click or on keyboard focus; opening plays its clip once. */
+  const files = (() => {
+    const row = $('#files'), tpl = $('#file-tpl');
+    const intro = $('.opener', row);
+    TEAM.forEach(id => {
+      const f = tpl.content.firstElementChild.cloneNode(true);
+      f.dataset.id = id;
+      $$('[data-k]', f).forEach(el => {
+        if (el.dataset.k === 'email') el.textContent = `${id}@legalia.ee`;
+        else el.dataset.i18n = `team.${id}.${el.dataset.k}`;
+      });
+      $('source', f).srcset = `${ASSETS}img/${id}.webp`;
+      $('img', f).src = `${ASSETS}img/${id}.png`;
+      const video = $('video', f);
+      video.dataset.src = `${ASSETS}video/${id}.mp4?v=2`;
+      video.addEventListener('playing', () => { if (f.classList.contains('open')) f.classList.add('is-playing'); else stopClip(f); });
+      row.append(f);
+    });
+    const panels = $$('.file', row);
+    function stopClip(f) {
+      const v = $('video', f);
+      if (!v) return;
+      v.pause(); f.classList.remove('is-playing');
+      if (v.readyState > 0 && v.currentTime !== 0) v.currentTime = 0;
     }
+    function playClip(f) {
+      const v = $('video', f);
+      if (!v || reduceMotion.matches || document.hidden) return;
+      if (!v.src) { v.src = v.dataset.src; v.preload = 'auto'; }
+      const p = v.play(); if (p) p.catch(() => {});
+    }
+    function open(f) {
+      if (!f || f.classList.contains('open')) return;
+      panels.forEach(x => { if (x !== f && x.classList.contains('open')) { x.classList.remove('open'); stopClip(x); } });
+      f.classList.add('open');
+      playClip(f);
+    }
+    // Sizes: the row fills the space between the margins; 5 strips + 1 open panel of 4.8 strips.
     function size() {
       if (phone.matches) return;
-      const cs = getComputedStyle(list);
-      const row = list.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
-      const min = { et: 250, en: 270, ru: 290 }[lang] || 250;            // the longest bio still fits
-      let w = Math.min((list.parentElement.clientHeight - 180) * 55 / 85, row * 0.4);
-      w = Math.max(w, min);
-      const strip = (row - w) / (cards.length - 1);
-      list.style.setProperty('--open-w', `${w.toFixed(1)}px`);
-      list.style.setProperty('--open-h', `${(w * 85 / 55).toFixed(1)}px`);
-      list.style.setProperty('--strip', `${strip.toFixed(1)}px`);
-      list.style.setProperty('--rest', `${((row - strip) / (cards.length - 1)).toFixed(1)}px`);
-      list.style.setProperty('--card-text', `${Math.min(15, Math.max(12, w * 0.03)).toFixed(1)}px`);
+      const strip = row.clientWidth / (panels.length - 1 + 4.8);
+      row.style.setProperty('--strip', `${strip.toFixed(1)}px`);
+      row.style.setProperty('--open', `${(strip * 4.8).toFixed(1)}px`);
+      // A bio that would run into the email shrinks in half-pixel steps.
+      $$('.person', row).forEach(f => {
+        const body = $('.body', f), mail = $('.email', f);
+        body.style.fontSize = '';
+        let px = parseFloat(getComputedStyle(body).fontSize);
+        const over = () => { const last = $('[data-k=lang]', f); return last.offsetTop + last.offsetHeight > mail.offsetTop - 12; };
+        while (over() && px > 10) { px -= 0.5; body.style.fontSize = `${px}px`; }
+      });
     }
-    const cancel = () => { clearTimeout(pend); pendCard = null; };
-    // Only a real mouse move counts: while the row re-arranges, cards slide under a still pointer,
+    let lx = -1, ly = -1, pend = 0, pendFile = null;
+    const cancel = () => { clearTimeout(pend); pendFile = null; };
+    // Only a real mouse move counts: while the row re-arranges, panels slide under a still pointer,
     // and the browser's synthetic moves (same coordinates) must not open those.
-    list.addEventListener('pointermove', e => {
-      if (e.pointerType !== 'mouse' || phone.matches || out() || (e.clientX === lx && e.clientY === ly)) return;
+    row.addEventListener('pointermove', e => {
+      if (e.pointerType !== 'mouse' || (e.clientX === lx && e.clientY === ly)) return;
       lx = e.clientX; ly = e.clientY;
-      const c = e.target.closest('.card');
-      if (!c || c.classList.contains('open')) return cancel();
-      if (c === pendCard) return;
-      cancel(); pendCard = c;
-      pend = setTimeout(() => { pendCard = null; open(c); }, 110);
+      const f = e.target.closest('.file');
+      if (!f || f.classList.contains('open')) return cancel();
+      if (f === pendFile) return;
+      cancel(); pendFile = f;
+      pend = setTimeout(() => { pendFile = null; open(f); }, 110);
     });
-    list.addEventListener('click', e => {
-      const c = e.target.closest('.card');
-      if (!c || phone.matches || e.target.closest('.flip')) return;
-      const o = out();
-      if (o && o !== c) { o.unflip(); return; } // the first click elsewhere puts the flipped card back
-      cancel(); open(c);
-    });
-    list.addEventListener('focusin', e => { const c = e.target.closest('.card'); if (c && !phone.matches && !out()) open(c); });
-    // Mouse gone: every card folds back (standby), unless the keyboard is inside or a card is flipped out.
-    list.addEventListener('pointerleave', e => { cancel(); if (e.pointerType === 'mouse' && !phone.matches && !out() && !list.contains(document.activeElement)) open(null); });
-    return { size };
+    row.addEventListener('pointerleave', e => { cancel(); if (e.pointerType === 'mouse' && !row.contains(document.activeElement)) open(intro); });
+    row.addEventListener('click', e => { const f = e.target.closest('.file'); if (f) { cancel(); open(f); } });
+    row.addEventListener('focusin', e => { const f = e.target.closest('.file'); if (f) open(f); });
+    row.addEventListener('focusout', e => { if (!row.contains(e.relatedTarget) && !row.matches(':hover')) open(intro); });
+    function label() { $$('.person', row).forEach(f => f.setAttribute('aria-label', text(`team.${f.dataset.id}.name`).value)); }
+    return { size, label, stop: () => panels.forEach(stopClip) };
   })();
-  const fitAll = () => { folder.size(); fitCards(); carousel.render(); };
+  const fitAll = () => { files.size(); files.label(); fitCards(); carousel.render(); };
 
   /* ---------- "Meist" text types itself out the first time it comes into view ---------- */
   /* Quick on purpose (about 1.2s for the whole paragraph). Screen readers get the full text
@@ -388,7 +402,7 @@
   addEventListener('resize', () => { cancelAnimationFrame(fitFrame); fitFrame = requestAnimationFrame(fitAll); });
   if (document.fonts) document.fonts.ready.then(fitAll);
 
-  const stopAll = () => $$('.card').forEach(c => c.stopVideo());
+  const stopAll = () => { $$('.card').forEach(c => c.stopVideo()); files.stop(); };
   document.addEventListener('visibilitychange', () => { if (document.hidden) stopAll(); });
   reduceMotion.addEventListener('change', () => { if (reduceMotion.matches) stopAll(); });
 
@@ -407,6 +421,7 @@
       seen.disconnect();
     }, { threshold: 0.6 });
     seen.observe($('#cards')); // most of the row in view, so the slide is seen from its start
+    seen.observe($('#files')); // (only one of the two is shown at a time)
   }
 
   /* ---------- the year: turns from 1992 to this year with the scroll, while the experience page is held on screen ---------- */

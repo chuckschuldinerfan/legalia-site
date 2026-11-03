@@ -77,12 +77,13 @@ header.at-hero .home{opacity:0;pointer-events:none}
 .team{position:relative;z-index:1;height:var(--hero-h);background:var(--paper)}
 /* The cards slide in from the right, one after another, the first time the section comes into view (main.js adds .in). */
 /* Each card starts a full screen to the right and slides into its place, one after another. */
-.team .card{opacity:0;translate:100vw 0}
-.team.in .card{opacity:1;translate:0 0;transition:opacity .35s ease,translate 1.5s cubic-bezier(.19,1,.22,1),width .7s cubic-bezier(.19,1,.22,1),transform .45s var(--ease)}
-.team.in .card:nth-child(2){transition-delay:.15s,.15s,0s,0s}
-.team.in .card:nth-child(3){transition-delay:.3s,.3s,0s,0s}
-.team.in .card:nth-child(4){transition-delay:.45s,.45s,0s,0s}
-.team.in .card:nth-child(5){transition-delay:.6s,.6s,0s,0s}
+.team .card,.team .file{opacity:0;translate:100vw 0}
+.team.in .card,.team.in .file{opacity:1;translate:0 0;transition:opacity .35s ease,translate 1.5s cubic-bezier(.19,1,.22,1),width .75s cubic-bezier(.5,0,.15,1)}
+.team.in .card:nth-child(2),.team.in .file:nth-child(2){transition-delay:.15s,.15s,0s}
+.team.in .card:nth-child(3),.team.in .file:nth-child(3){transition-delay:.3s,.3s,0s}
+.team.in .card:nth-child(4),.team.in .file:nth-child(4){transition-delay:.45s,.45s,0s}
+.team.in .card:nth-child(5),.team.in .file:nth-child(5){transition-delay:.6s,.6s,0s}
+.team.in .file:nth-child(6){transition-delay:.75s,.75s,0s}
 .cards{position:absolute;left:0;right:0;top:50%;margin:0;list-style:none;align-items:end;translate:0 -50%}
 .card{position:relative;aspect-ratio:55/85;max-height:calc(var(--hero-h) - 2 * 90px);font-size:var(--card-text);line-height:1.45;letter-spacing:.01em}
 /* Two layers, so the two motions never fight:
@@ -226,30 +227,38 @@ main{position:relative;z-index:1}
   .menu{grid-column:4 / span 2}
 }
 
-/* ---------- from 761px: the cards as folders ---------- */
-/* At rest all five cards share the row, each showing the left part of itself; hovering one opens it
-   and the others narrow to a strip of their left side, each one seemingly lying on top of the one
-   before it: the shadow on every card's left edge falls on its neighbour. The card's content keeps
-   the open width (--open-w) and the card only shows as much of it as its own width allows, so
-   nothing re-wraps while it opens. Sizes come from main.js (folder.size). */
+/* ---------- from 761px: the team as a row of files ---------- */
+/* As on neuemontreal.com: the intro and five files side by side, one open at 4.8 times the width of
+   the others (sizes from main.js). A closed file shows only its left edge, where the name runs
+   upward; the open one adds the photo (its clip plays once) and the bio under it. The files are
+   white and each casts a shadow on the one before it, so they read as a stack. The open/close
+   motion starts slowly and settles slowly (.75s). Phones keep the business cards. */
+.files{display:none}
 @media (min-width:761px){
-  .cards.grid{display:flex;align-items:flex-end;column-gap:0;overflow:visible;scroll-snap-type:none}
-  .cards .card{flex:none;width:var(--strip, 20%);height:var(--open-h, 60vh);max-height:none;aspect-ratio:auto;overflow:hidden;background:var(--card);
-    box-shadow:-18px 0 30px -16px rgba(0,0,0,.32),0 10px 26px -12px rgba(0,0,0,.14);transition:width .7s cubic-bezier(.19,1,.22,1),transform .45s var(--ease)}
-  .cards .card:first-child{box-shadow:0 10px 26px -12px rgba(0,0,0,.14)}
-  .cards:not(.opened) .card{width:var(--rest, 20%)}
-  .cards .card:last-child:not(.open){width:var(--strip, 20%)}
-  .cards .card.open{width:var(--open-w, 30%)}
-  .cards .card:not(.open){cursor:pointer}
-  .cards .card .inner{right:auto;width:var(--open-w, 30%)}
-  .cards .face,.cards .card:hover .face{box-shadow:none}
-  .cards .card:hover .inner{transform:none}
-  /* Flipping: the card comes out of the deck (lifted, a little larger, above its neighbours) and
-     turns there as a whole card; turned back, it sinks into the deck again (main.js: .out, .returning). */
-  .cards .card.out,.cards .card.returning{z-index:5}
-  .cards .card.out{overflow:visible;background:none;box-shadow:none;transform:translateY(-18px) scale(1.06)}
-  .cards .face{transition:box-shadow .45s}
-  .cards .card.out .face{box-shadow:0 2px 6px rgba(0,0,0,.06),0 40px 70px -24px rgba(0,0,0,.38)}
+  .team .cards{display:none}
+  .files{position:absolute;left:var(--gut);right:var(--gut-r);top:50%;translate:0 -50%;height:min(calc(var(--hero-h) - 180px), 900px);display:flex;font-size:var(--step-0)}
+  .file{position:relative;flex:none;width:var(--strip, 10%);height:100%;overflow:hidden;transition:width .75s cubic-bezier(.5,0,.15,1)}
+  .file.open{width:var(--open, 50%)}
+  .file .in{position:absolute;top:0;bottom:0;left:0;width:var(--open, 50%)}
+  /* Intro: on the page itself, the title at the top, the line at the bottom. */
+  .opener .in{display:flex;flex-direction:column;justify-content:space-between;padding:0 var(--gap) 0 0}
+  .files-h{font-size:clamp(34px, 4.6vw, 72px);font-weight:300;line-height:.98;letter-spacing:-.035em}
+  .files-p{max-width:26em;font-size:var(--step-1);line-height:1.2;letter-spacing:-.01em}
+  /* A person's file */
+  .person{background:var(--card);box-shadow:-18px 0 30px -16px rgba(0,0,0,.3),0 10px 26px -12px rgba(0,0,0,.12);cursor:pointer;outline:none}
+  .person.open{cursor:auto}
+  .person:focus-visible .nm{text-decoration:underline;text-underline-offset:.12em;text-decoration-thickness:1px}
+  /* The name runs bottom to top, its end at the top, the title in small type beside it. */
+  .tab{position:absolute;top:24px;bottom:24px;left:20px;margin:0;display:flex;gap:.5em;writing-mode:vertical-rl;transform:rotate(180deg);text-align:end;white-space:nowrap}
+  .tab .nm{font-size:clamp(30px, 3.3vw, 54px);font-weight:400;line-height:1;letter-spacing:-.025em;color:var(--fg)}
+  .tab .g{font-size:var(--step-0);line-height:1}
+  .body{position:absolute;top:24px;bottom:24px;left:var(--strip, 10%);right:24px;display:flex;flex-direction:column;gap:1em;line-height:1.4}
+  .pic{position:relative;flex:none;align-self:flex-start;height:42%;aspect-ratio:7/8;margin-bottom:.6em;overflow:hidden;background:#fff}
+  .pic img,.pic video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
+  .pic video{opacity:0}
+  .file.is-playing .pic video{opacity:1}
+  .body .lead{color:var(--fg)}
+  .body .email{margin-top:auto;color:var(--fg)}
 }
 
 /* ---------- phones: narrower margins, the menu stacks under itself on the right ---------- */
@@ -295,7 +304,8 @@ main{position:relative;z-index:1}
 .intro.landed ~ header .menu{opacity:1;transition:opacity .8s ease}
 .intro.landed .hands{opacity:0;transition:opacity .5s ease}
 @media (prefers-reduced-motion:reduce){
-  .cards .card{transition:none}
+  .file{transition:none}
+  .team .file{opacity:1;translate:none}
   .intro{display:none}
   .team .card{opacity:1;translate:none}
   .team.in .card{transition:none}

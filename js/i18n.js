@@ -9,6 +9,7 @@ window.LEGALIA_I18N = {
     header: { home: 'Legalia, avaleht', menu: 'Menüü', language: 'Keel' },
     nav: { about: 'Meist', contact: 'Kontakt' },
     hero: { label: 'Meeskond' },
+    files: { title: 'Meie meeskond', text: 'Viis inimest, kes seisavad Teie huvide eest. Iga nime taga on lühike toimik: valdkonnad, haridus ja keeled, milles saame Teid nõustada.' }, // own text, to check
     card: { flip: 'Klõpsa pööramiseks', back: 'Pööra tagasi' },
     about: {
       label: 'Meist',
@@ -62,6 +63,7 @@ window.LEGALIA_I18N = {
     header: { home: 'Legalia, home page', menu: 'Menu', language: 'Language' },          // own translation
     nav: { about: 'About', contact: 'Contact' },
     hero: { label: 'Team' },                                                              // own translation
+    files: { title: 'Our team', text: 'Five people who stand up for your interests. Behind each name is a short file: practice areas, education and the languages we can advise you in.' }, // own text
     card: { flip: 'Click to flip', back: 'Flip back' },                                  // own translation
     about: {
       label: 'About',
@@ -108,6 +110,7 @@ window.LEGALIA_I18N = {
     header: { home: 'Legalia, главная страница', menu: 'Меню', language: 'Язык' },       // own translation
     nav: { about: 'О нас', contact: 'Контакты' },
     hero: { label: 'Команда' },                                                           // own translation
+    files: { title: 'Наша команда', text: 'Пять человек, которые защищают Ваши интересы. За каждым именем — короткое досье: области практики, образование и языки, на которых мы можем Вас консультировать.' }, // own text
     card: { flip: 'Перевернуть', back: 'Назад' },           // own translation
     about: {
       label: 'О нас',
