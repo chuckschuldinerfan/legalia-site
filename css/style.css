@@ -233,7 +233,7 @@ main{position:relative;z-index:1}
   .roster{position:relative;display:flex;flex-direction:column;justify-content:space-between;gap:80px;min-height:var(--hero-h);padding-block:110px calc(var(--gut) * 1.618)}
   .roster-top{align-items:start}
   .roster-h{grid-column:1;margin:0;font-size:var(--step-0);font-weight:400;color:var(--on-ink-mute)}
-  .roster-p{grid-column:2 / -1;margin:0;max-width:24em;font-size:var(--step-2);line-height:1.12;letter-spacing:-.02em;text-wrap:pretty}
+  .roster-p{grid-column:1 / -1;margin:.6em 0 0;max-width:24em;font-size:var(--step-2);line-height:1.12;letter-spacing:-.02em;text-wrap:pretty}
   .rows{margin:0;padding:0;list-style:none}
   .row{position:relative;z-index:0;display:flex;justify-content:space-between;align-items:center;gap:24px;padding:10px var(--gut-r) 10px var(--gut);border-top:1px solid;cursor:default;outline:none}
   .row:last-child{border-bottom:1px solid}
