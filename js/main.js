@@ -314,10 +314,11 @@
       if (!v.src) { v.src = v.dataset.src; v.preload = 'auto'; }
       const p = v.play(); if (p) p.catch(() => {});
     }
-    // The card sits in the middle of the screen, but never outside the black section.
+    // The cards sit in the middle of the screen, but never outside the black section. They all share
+    // one top edge, set by the tallest card, so switching person never moves the card.
     function place() {
       if (phone.matches || !looks.classList.contains('on')) return;
-      const r = box.getBoundingClientRect(), h = ($('.look.cur', stack) || stack).offsetHeight;
+      const r = box.getBoundingClientRect(), h = stack.offsetHeight;
       const y = Math.min(Math.max(innerHeight / 2 - h / 2 - r.top, 24), r.height - h - 24);
       looks.style.transform = `translate3d(0,${Math.round(y)}px,0)`;
     }
