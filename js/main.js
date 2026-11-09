@@ -327,8 +327,13 @@
       const c = cards[id], prev = $('.look.cur', stack);
       if (c !== prev) {
         if (prev) { prev.classList.replace('cur', 'was'); stopClip(prev); }
+        // The wipe only when changing person on a card already showing; coming back from outside the
+        // list, the panel's own slide-in is the reveal (both at once would start the card a width off).
+        const wipe = looks.classList.contains('on');
+        if (!wipe) $$('.look.was', stack).forEach(x => x.classList.remove('was'));
         c.classList.remove('wipe', 'was'); void c.offsetWidth;
-        c.classList.add('cur', 'wipe');
+        c.classList.add('cur');
+        if (wipe) c.classList.add('wipe');
         c.style.zIndex = ++z;
       }
       looks.classList.add('on');
