@@ -218,44 +218,54 @@ main{position:relative;z-index:1}
   .menu{grid-column:4 / span 2}
 }
 
-/* ---------- from 761px: the team as a row of files ---------- */
-/* A copy of the strip section on neuemontreal.com at its sizes (measured at 1440px wide: strips
-   73px, the open one 349px, a 100px label column with a 1px rule; here all a quarter bigger, the row 765px tall from 100px
-   down), in white instead of colours, with a shadow on each file's left edge so they read as a
-   stack. The intro takes the rest of the width on the left; the files are closed at rest and the one
-   pointed at opens. Sizes scale with the width (main.js, files.size). Phones keep the business cards. */
-.files{display:none}
+/* ---------- from 761px: the team as a list of names ---------- */
+/* After the team list on k72.ca/en/about, at its sizes (measured at 1440px wide: rows 74px with a
+   1px line, the role 16px top left, the name 40px uppercase on the right; the fill 0.3s, the picture
+   a quarter of the width, one quarter in, sliding in from the left in 0.3s). Black like theirs, the
+   fill in the accent instead of their lime, and instead of their tall photo a smaller card: the
+   photo (its clip plays once) with the person's description under it. main.js (roster) builds it.
+   Phones keep the business cards. */
+.roster{display:none}
 @media (min-width:761px){
+  .team{height:auto;min-height:var(--hero-h);background:var(--ink);color:var(--on-ink)}
+  .team ::selection{background:var(--on-ink);color:var(--ink)}
   .team .cards{display:none}
-  .files{position:absolute;left:0;right:0;top:100px;height:calc(var(--hero-h) - 135px);display:flex}
-  .file{position:relative;flex:none;width:var(--strip, 91px);height:100%;overflow:hidden;transition:width .75s cubic-bezier(.5,0,.15,1)}
-  .file.open{width:var(--open, 436px)}
-  .file .in{position:absolute;top:0;bottom:0;left:0;width:var(--open, 436px)}
-  /* Intro: the title at the top, the line at the bottom. */
-  .file.opener{flex:1 1 auto;width:auto;overflow:visible}
-  .opener .in{right:0;width:auto;display:flex;flex-direction:column;justify-content:space-between;padding:24px var(--gut) 24px var(--gut)}
-  .files-h{font-size:clamp(44px, 5.3vw, 80px);font-weight:300;line-height:.9;letter-spacing:-.03em}
-  .files-p{max-width:15em;font-size:var(--step-1);line-height:1.1;letter-spacing:-.01em}
-  /* A person's file */
-  .person{background:var(--card);box-shadow:-18px 0 30px -16px rgba(0,0,0,.3),0 10px 26px -12px rgba(0,0,0,.12);cursor:pointer;outline:none}
-  .person.open{cursor:auto}
-  .person:focus-visible .nm{text-decoration:underline;text-underline-offset:.12em;text-decoration-thickness:1px}
-  /* The label column: 120px with a 1px rule on its right (seen only once the file is open); the
-     name in thin type (Helvetica Neue Thin). The name
-     runs bottom to top, its end 24px from the top, 14px from the left edge. */
-  .person .in::before{content:"";position:absolute;top:0;bottom:0;left:120px;width:1px;background:var(--fg)}
-  .tab{position:absolute;top:24px;bottom:24px;left:16px;margin:0;writing-mode:vertical-rl;transform:rotate(180deg);text-align:end;white-space:nowrap}
-  .tab .nm{font-size:clamp(56px, 6.4vw, 92px);font-weight:200;line-height:.95;letter-spacing:-.03em;color:var(--fg)}
-  .body{position:absolute;top:24px;bottom:24px;left:146px;right:24px;display:flex;flex-direction:column;gap:.9em;font-size:var(--step-0);line-height:1.15}
-  .pic{position:relative;flex:none;width:100%;aspect-ratio:7/8;max-height:45%;overflow:hidden;background:#fff}
+  .roster{position:relative;display:flex;flex-direction:column;justify-content:space-between;gap:80px;min-height:var(--hero-h);padding-block:110px calc(var(--gut) * 1.618)}
+  .roster-top{align-items:start}
+  .roster-h{grid-column:1;margin:0;font-size:var(--step-0);font-weight:400;color:var(--on-ink-mute)}
+  .roster-p{grid-column:2 / -1;margin:0;max-width:24em;font-size:var(--step-2);line-height:1.12;letter-spacing:-.02em;text-wrap:pretty}
+  .rows{margin:0;padding:0;list-style:none}
+  .row{position:relative;z-index:0;display:flex;justify-content:space-between;align-items:center;gap:24px;padding:10px var(--gut-r) 10px var(--gut);border-top:1px solid;cursor:default;outline:none}
+  .row:last-child{border-bottom:1px solid}
+  .row::before{content:"";position:absolute;inset:0;z-index:-1;background:var(--accent);transform:scaleY(0);transform-origin:center top;transition:transform .3s cubic-bezier(.215,.61,.355,1)}
+  .row:hover::before,.row:focus-visible::before{transform:none}
+  .role{align-self:flex-start;color:var(--on-ink-mute);transition:color .3s cubic-bezier(.215,.61,.355,1)}
+  .row:hover .role,.row:focus-visible .role{color:var(--on-accent-mute)}
+  .row .nm{padding-block:10px;margin-bottom:-.2em;font-size:clamp(28px, 2.78vw, 48px);line-height:1;text-transform:uppercase;white-space:nowrap}
+  /* The card: placed over the list by main.js (in the middle of the screen, kept inside the section).
+     The outer box slides in from the left while the inner one slides the other way, so the card is
+     revealed in place; changing person wipes the new card in over the old one. */
+  .looks{position:absolute;left:0;top:0;width:100%;pointer-events:none;z-index:2}
+  .looks-out{width:calc(25vw - 12.5px);margin-left:calc(25vw + 7.5px);overflow:hidden;transform:translate3d(-101%,0,0);transition:transform .3s cubic-bezier(.215,.61,.355,1)}
+  .looks-in{display:grid;transform:translate3d(101%,0,0);transition:transform .3s cubic-bezier(.215,.61,.355,1)}
+  .looks.on .looks-out,.looks.on .looks-in{transform:none}
+  .look{grid-area:1 / 1;align-self:start;margin:0;overflow:hidden;background:var(--card);color:var(--fg);visibility:hidden}
+  .look.cur{visibility:visible}
+  .look.wipe{animation:look-in .3s cubic-bezier(.215,.61,.355,1) forwards}
+  .look.wipe > *{animation:look-in-inner .3s cubic-bezier(.215,.61,.355,1) forwards}
+  .look.was{visibility:visible}
+  .pic{position:relative;aspect-ratio:7/8;overflow:hidden;background:#fff}
   .pic img,.pic video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
   .pic video{opacity:0}
-  .file.is-playing .pic video{opacity:1}
+  .look.is-playing .pic video{opacity:1}
   /* Piret's photo and clip are framed wider than the others; zoomed so her shoulders reach the edges like theirs. */
-  .person[data-id=piret] .pic img,.person[data-id=piret] .pic video{transform:scale(1.12);transform-origin:50% 100%}
-  .body .lead{color:var(--fg)}
-  .body .email{margin-top:auto;color:var(--fg)}
+  .look[data-id=piret] .pic img,.look[data-id=piret] .pic video{transform:scale(1.12);transform-origin:50% 100%}
+  figcaption{display:flex;flex-direction:column;gap:.7em;padding:16px 16px 18px;font-size:var(--step-0);line-height:1.2}
+  figcaption p{margin:0}
+  figcaption .email{margin-top:.4em}
 }
+@keyframes look-in{from{transform:translate3d(-100%,0,0)}to{transform:none}}
+@keyframes look-in-inner{from{transform:translate3d(100%,0,0)}to{transform:none}}
 
 /* ---------- phones: narrower margins, the menu stacks under itself on the right ---------- */
 @media (max-width:760px){
@@ -282,7 +292,8 @@ main{position:relative;z-index:1}
 
 @media (prefers-reduced-motion:reduce){
   html{scroll-behavior:auto}
-  .inner,.face,.flip,.flip img,.find .arrow{transition:none}
+  .inner,.face,.flip,.flip img,.find .arrow,.row::before,.role,.looks-out,.looks-in{transition:none}
+  .look.wipe,.look.wipe > *{animation:none}
   .card:hover .inner{transform:none}
   .card.to-back .turn,.card.to-front .turn,.card.to-back .face,.card.to-front .face{animation:none}
 }
@@ -300,6 +311,5 @@ main{position:relative;z-index:1}
 .intro.landed ~ header .menu{opacity:1;transition:opacity .8s ease}
 .intro.landed .hands{opacity:0;transition:opacity .5s ease}
 @media (prefers-reduced-motion:reduce){
-  .file{transition:none}
   .intro{display:none}
 }

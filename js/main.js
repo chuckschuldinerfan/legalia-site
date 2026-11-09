@@ -276,87 +276,84 @@
       while (overflows() && size > 8) { size -= 0.5; bio.style.fontSize = `${size}px`; }
     });
   }
-  /* ---------- tablets and desktops: the team as a row of files ---------- */
-  /* The intro on the left, then one file per person, at the sizes of neuemontreal.com's strips.
-     All files are closed at rest, showing only their left edge, where the name runs upward;
-     the one pointed at opens, and they all close again when the pointer leaves the row. Each file keeps its content at the open
-     width and only shows as much as its own width allows, so nothing re-wraps while it opens.
-     A file opens when the pointer settles on it (a fast sweep opens nothing on the way), on click
-     or on keyboard focus; opening plays its clip once. */
-  const files = (() => {
-    const row = $('#files'), tpl = $('#file-tpl');
+  /* ---------- tablets and desktops: the team as a list of names ---------- */
+  /* After k72.ca/en/about: pointing at a row (or focusing it) fills it with the accent and slides in
+     that person's card, the photo with the description under it; its clip plays once. Moving to
+     another row wipes the new card in over the old one; leaving the row slides the card out. */
+  const roster = (() => {
+    const box = $('#roster'), rows = $('.rows', box), looks = $('.looks', box), stack = $('.looks-in', box);
+    const rowTpl = $('#row-tpl'), lookTpl = $('#look-tpl');
+    const cards = {};
     TEAM.forEach(id => {
-      const f = tpl.content.firstElementChild.cloneNode(true);
-      f.dataset.id = id;
-      $$('[data-k]', f).forEach(el => {
-        if (el.dataset.k === 'email') el.textContent = `${id}@legalia.ee`;
-        else el.dataset.i18n = `team.${id}.${el.dataset.k}`;
-      });
-      $('source', f).srcset = `${ASSETS}img/${id}.webp`;
-      $('img', f).src = `${ASSETS}img/${id}.png`;
-      const video = $('video', f);
+      const r = rowTpl.content.firstElementChild.cloneNode(true);
+      r.dataset.id = id;
+      r.setAttribute('aria-describedby', `look-${id}`);
+      const c = lookTpl.content.firstElementChild.cloneNode(true);
+      c.dataset.id = id;
+      $('figcaption', c).id = `look-${id}`;
+      [r, c].forEach(el => $$('[data-k]', el).forEach(k => {
+        if (k.dataset.k === 'email') k.textContent = `${id}@legalia.ee`;
+        else k.dataset.i18n = `team.${id}.${k.dataset.k}`;
+      }));
+      $('source', c).srcset = `${ASSETS}img/${id}.webp`;
+      $('img', c).src = `${ASSETS}img/${id}.png`;
+      const video = $('video', c);
       video.dataset.src = `${ASSETS}video/${id}.mp4?v=2`;
-      video.addEventListener('playing', () => { if (f.classList.contains('open')) f.classList.add('is-playing'); else stopClip(f); });
-      row.append(f);
+      video.addEventListener('playing', () => { if (c.classList.contains('cur') && looks.classList.contains('on')) c.classList.add('is-playing'); else stopClip(c); });
+      c.addEventListener('animationend', e => { if (e.target === c) $$('.look.was', stack).forEach(x => x.classList.remove('was')); });
+      rows.append(r); stack.append(c); cards[id] = c;
     });
-    const panels = $$('.person', row);
-    function stopClip(f) {
-      const v = $('video', f);
-      if (!v) return;
-      v.pause(); f.classList.remove('is-playing');
+    function stopClip(c) {
+      const v = $('video', c);
+      v.pause(); c.classList.remove('is-playing');
       if (v.readyState > 0 && v.currentTime !== 0) v.currentTime = 0;
     }
-    function playClip(f) {
-      const v = $('video', f);
-      if (!v || reduceMotion.matches || document.hidden) return;
+    function playClip(c) {
+      const v = $('video', c);
+      if (reduceMotion.matches || document.hidden) return;
       if (!v.src) { v.src = v.dataset.src; v.preload = 'auto'; }
       const p = v.play(); if (p) p.catch(() => {});
     }
-    function open(f) {
-      if (f && f.classList.contains('open')) return;
-      panels.forEach(x => { if (x !== f && x.classList.contains('open')) { x.classList.remove('open'); stopClip(x); } });
-      if (!f) return;
-      f.classList.add('open');
-      playClip(f);
+    // The card sits in the middle of the screen, but never outside the black section.
+    function place() {
+      if (phone.matches || !looks.classList.contains('on')) return;
+      const r = box.getBoundingClientRect(), h = ($('.look.cur', stack) || stack).offsetHeight;
+      const y = Math.min(Math.max(innerHeight / 2 - h / 2 - r.top, 24), r.height - h - 24);
+      looks.style.transform = `translate3d(0,${Math.round(y)}px,0)`;
     }
-    // Sizes: neuemontreal.com's at 1440px wide (strip 73px, open 349px) made a quarter bigger
-    // (user asked), scaled with the width; the open file never gets narrower than its bio needs.
+    let z = 1;
+    function show(id) {
+      const c = cards[id], prev = $('.look.cur', stack);
+      if (c !== prev) {
+        if (prev) { prev.classList.replace('cur', 'was'); stopClip(prev); }
+        c.classList.remove('wipe', 'was'); void c.offsetWidth;
+        c.classList.add('cur', 'wipe');
+        c.style.zIndex = ++z;
+      }
+      looks.classList.add('on');
+      place();
+      if (c !== prev || !c.classList.contains('is-playing')) playClip(c);
+    }
+    function hide() { looks.classList.remove('on'); $$('.look', stack).forEach(stopClip); }
+    rows.addEventListener('mouseover', e => { const r = e.target.closest('.row'); if (r) show(r.dataset.id); });
+    rows.addEventListener('mouseleave', () => { if (!rows.contains(document.activeElement)) hide(); });
+    rows.addEventListener('focusin', e => { const r = e.target.closest('.row'); if (r) show(r.dataset.id); });
+    rows.addEventListener('focusout', e => { if (!rows.contains(e.relatedTarget) && !rows.matches(':hover')) hide(); });
+    // A long description gets smaller in half-pixel steps, so the card always fits the screen.
     function size() {
       if (phone.matches) return;
-      const w = row.clientWidth;
-      row.style.setProperty('--strip', `${Math.max(64, (w * 91) / 1440).toFixed(1)}px`);
-      row.style.setProperty('--open', `${Math.max(360, (w * 436) / 1440).toFixed(1)}px`);
-      // A bio that would run into the email shrinks in half-pixel steps.
-      $$('.person', row).forEach(f => {
-        const body = $('.body', f), mail = $('.email', f);
-        body.style.fontSize = '';
-        let px = parseFloat(getComputedStyle(body).fontSize);
-        const over = () => { const last = $('[data-k=lang]', f); return last.offsetTop + last.offsetHeight > mail.offsetTop - 12; };
-        while (over() && px > 10) { px -= 0.5; body.style.fontSize = `${px}px`; }
+      const room = innerHeight - 96;
+      $$('.look', stack).forEach(c => {
+        const cap = $('figcaption', c);
+        cap.style.fontSize = '';
+        let px = parseFloat(getComputedStyle(cap).fontSize);
+        while (c.offsetHeight > room && px > 10) { px -= 0.5; cap.style.fontSize = `${px}px`; }
       });
+      place();
     }
-    let lx = -1, ly = -1, pend = 0, pendFile = null;
-    const cancel = () => { clearTimeout(pend); pendFile = null; };
-    // Only a real mouse move counts: while the row re-arranges, panels slide under a still pointer,
-    // and the browser's synthetic moves (same coordinates) must not open those.
-    row.addEventListener('pointermove', e => {
-      if (e.pointerType !== 'mouse' || (e.clientX === lx && e.clientY === ly)) return;
-      lx = e.clientX; ly = e.clientY;
-      const f = e.target.closest('.person');
-      if (!f || f.classList.contains('open')) return cancel();
-      if (f === pendFile) return;
-      cancel(); pendFile = f;
-      pend = setTimeout(() => { pendFile = null; open(f); }, 110);
-    });
-    // Mouse gone: every file closes again, unless the keyboard is inside the row.
-    row.addEventListener('pointerleave', e => { cancel(); if (e.pointerType === 'mouse' && !row.contains(document.activeElement)) open(null); });
-    row.addEventListener('focusout', e => { if (!row.contains(e.relatedTarget) && !row.matches(':hover')) open(null); });
-    row.addEventListener('click', e => { const f = e.target.closest('.person'); if (f) { cancel(); open(f); } });
-    row.addEventListener('focusin', e => { const f = e.target.closest('.person'); if (f) open(f); });
-    function label() { $$('.person', row).forEach(f => f.setAttribute('aria-label', text(`team.${f.dataset.id}.name`).value)); }
-    return { size, label, stop: () => panels.forEach(stopClip) };
+    return { size, place, stop: hide };
   })();
-  const fitAll = () => { files.size(); files.label(); fitCards(); carousel.render(); };
+  const fitAll = () => { roster.size(); fitCards(); carousel.render(); };
 
   /* ---------- "Meist" text types itself out the first time it comes into view ---------- */
   /* Quick on purpose (about 1.2s for the whole paragraph). Screen readers get the full text
@@ -404,7 +401,7 @@
   addEventListener('resize', () => { cancelAnimationFrame(fitFrame); fitFrame = requestAnimationFrame(fitAll); });
   if (document.fonts) document.fonts.ready.then(fitAll);
 
-  const stopAll = () => { $$('.card').forEach(c => c.stopVideo()); files.stop(); };
+  const stopAll = () => { $$('.card').forEach(c => c.stopVideo()); roster.stop(); };
   document.addEventListener('visibilitychange', () => { if (document.hidden) stopAll(); });
   reduceMotion.addEventListener('change', () => { if (reduceMotion.matches) stopAll(); });
 
@@ -490,6 +487,7 @@
     if (team.getBoundingClientRect().bottom < innerHeight * 0.25) stopAll();
     if (aboutTop < mid) typer.start();
     yearFromScroll();
+    roster.place();
   }
   addEventListener('scroll', () => { if (!ticking) { ticking = true; requestAnimationFrame(onScroll); } }, { passive: true });
   addEventListener('resize', onScroll);

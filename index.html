@@ -6,10 +6,10 @@
 <title>Legalia Advokaadibüroo</title>
 <meta name="theme-color" content="#f9f9f9">
 <link rel="icon" href="assets/logo.svg" type="image/svg+xml">
-<link rel="stylesheet" href="css/style.css?v=v2-29">
-<script src="js/i18n.js?v=v2-29" defer></script>
-<script src="js/main.js?v=v2-29" defer></script>
-<script src="js/intro.js?v=v2-29" defer></script>
+<link rel="stylesheet" href="css/style.css?v=v2-30">
+<script src="js/i18n.js?v=v2-30" defer></script>
+<script src="js/main.js?v=v2-30" defer></script>
+<script src="js/intro.js?v=v2-30" defer></script>
 </head>
 <body>
 <!-- All texts live in js/i18n.js. Elements here only carry their key (data-i18n for text, data-i18n-label for aria-label). -->
@@ -32,15 +32,18 @@
   <!-- The team: the cards slide in once, the first time the section comes into view. -->
   <section class="team" id="team" data-i18n-label="hero.label">
     <ul class="cards grid" id="cards" role="list"></ul>
-    <!-- Tablets and desktops: the intro on the left, then a row of five files; pointing at a
-         name opens that person's file (main.js builds the five from #file-tpl). -->
-    <div class="files" id="files">
-      <section class="file opener" aria-labelledby="files-h">
-        <div class="in">
-          <h2 class="files-h" id="files-h" data-i18n="files.title"></h2>
-          <p class="files-p" data-i18n="files.text"></p>
-        </div>
-      </section>
+    <!-- Tablets and desktops: a list of names, after k72.ca/en/about. Pointing at a row fills it with the
+         accent and slides in that person's photo with their description under it (main.js builds the
+         rows from #row-tpl and the cards from #look-tpl). -->
+    <div class="roster" id="roster">
+      <div class="grid roster-top">
+        <h2 class="roster-h" id="files-h" data-i18n="files.title"></h2>
+        <p class="roster-p" data-i18n="files.text"></p>
+      </div>
+      <ul class="rows" role="list"></ul>
+      <div class="looks"><div class="looks-out"><div class="looks-in"></div></div></div>
+    </div>
+  </section>
     </div>
   </section>
 
@@ -83,25 +86,21 @@
   </div>
 </footer>
 
-<!-- One person's file (tablets and desktops): the name runs up the left edge; opened, the photo
-     (and its clip) sits at the top with the bio under it. -->
-<template id="file-tpl">
-  <article class="file person" tabindex="0">
-    <div class="in">
-      <p class="tab"><span class="nm" data-k="name"></span></p>
-      <div class="body">
-        <div class="pic">
-          <picture><source type="image/webp"><img alt="" width="700" height="800" decoding="async" loading="lazy"></picture>
-          <video muted playsinline disablepictureinpicture preload="none" aria-hidden="true" tabindex="-1"></video>
-        </div>
-        <p class="g" data-k="title"></p>
-        <p class="lead" data-k="spec"></p>
-        <p class="g" data-k="cred"></p>
-        <p class="g" data-k="lang"></p>
-        <p class="email"><span data-k="email"></span></p>
-      </div>
-    </div>
-  </article>
+<!-- One row of the team list and one person's card (tablets and desktops); main.js fills the data-k fields. -->
+<template id="row-tpl">
+  <li class="row" tabindex="0"><span class="role" data-k="title"></span><span class="nm" data-k="name"></span></li>
+</template>
+<template id="look-tpl">
+  <figure class="look">
+    <div class="pic"><picture><source type="image/webp"><img alt="" width="700" height="800" decoding="async" loading="lazy"></picture>
+      <video muted playsinline disablepictureinpicture preload="none" aria-hidden="true" tabindex="-1"></video></div>
+    <figcaption>
+      <p class="lead" data-k="spec"></p>
+      <p class="g" data-k="cred"></p>
+      <p class="g" data-k="lang"></p>
+      <p class="email"><span data-k="email"></span></p>
+    </figcaption>
+  </figure>
 </template>
 
 <!-- One business card; js/main.js clones it per team member and fills the data-k fields. -->
