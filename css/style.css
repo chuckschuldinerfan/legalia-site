@@ -249,8 +249,8 @@ main{position:relative;z-index:1}
   .looks{position:absolute;left:0;top:0;width:100%;pointer-events:none;z-index:2}
   .looks-out{width:calc(25vw - 12.5px);margin-left:calc(25vw + 7.5px);clip-path:inset(0 100% 0 0);transition:clip-path .3s cubic-bezier(.215,.61,.355,1)}
   .looks-in{display:grid}
-  .looks.on .looks-out{clip-path:inset(0)}
-  .look{grid-area:1 / 1;align-self:start;margin:0;overflow:hidden;background:var(--card);color:var(--fg);visibility:hidden}
+  .looks.on .looks-out{clip-path:inset(0 0 0 0)}
+  .look{grid-area:1 / 1;align-self:start;margin:0;overflow:hidden;border-radius:12px;background:var(--card);color:var(--fg);visibility:hidden}
   .look.cur{visibility:visible}
   .look.wipe{animation:look-in .3s cubic-bezier(.215,.61,.355,1) forwards}
   .look.was{visibility:visible}
@@ -258,13 +258,19 @@ main{position:relative;z-index:1}
   .pic img,.pic video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
   .pic video{opacity:0}
   .look.is-playing .pic video{opacity:1}
-  /* Piret's photo and clip are framed wider than the others; zoomed so her shoulders reach the edges like theirs. */
-  .look[data-id=piret] .pic img,.look[data-id=piret] .pic video{transform:scale(1.12);transform-origin:50% 100%}
+  /* Everyone is framed differently in their photo; each is scaled (from the bottom) and centred so
+     the shoulders end 6% from both sides of the card (measured from the photos; the clips share the framing). */
+  .pic img,.pic video{transform:var(--fit, none);transform-origin:50% 100%}
+  .look[data-id=aivar] .pic{--fit:translateX(0.00%) scale(0.880)}
+  .look[data-id=dragan] .pic{--fit:translateX(-0.98%) scale(0.915)}
+  .look[data-id=henrik] .pic{--fit:translateX(-0.13%) scale(0.883)}
+  .look[data-id=gert] .pic{--fit:translateX(0.00%) scale(0.880)}
+  .look[data-id=piret] .pic{--fit:translateX(-0.42%) scale(0.975)}
   figcaption{display:flex;flex-direction:column;gap:.7em;padding:16px 16px 18px;font-size:var(--step-0);line-height:1.2}
   figcaption p{margin:0}
   figcaption .email{margin-top:.4em}
 }
-@keyframes look-in{from{clip-path:inset(0 100% 0 0)}to{clip-path:inset(0)}}
+@keyframes look-in{from{clip-path:inset(0 100% 0 0 round 12px)}to{clip-path:inset(0 round 12px)}}
 
 /* ---------- phones: narrower margins, the menu stacks under itself on the right ---------- */
 @media (max-width:760px){
