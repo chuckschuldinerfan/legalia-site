@@ -243,16 +243,16 @@ main{position:relative;z-index:1}
   .row:hover .role,.row:focus-visible .role{color:var(--on-accent-mute)}
   .row .nm{padding-block:10px;margin-bottom:-.2em;font-size:clamp(28px, 2.78vw, 48px);line-height:1;text-transform:uppercase;white-space:nowrap}
   /* The card: placed over the list by main.js (in the middle of the screen, kept inside the section).
-     The outer box slides in from the left while the inner one slides the other way, so the card is
-     revealed in place; changing person wipes the new card in over the old one. */
+     It is uncovered in place from left to right (theirs does this with two boxes sliding against
+     each other; a mask gives the same picture and can never shift the card when moves overlap);
+     changing person uncovers the new card the same way over the old one. */
   .looks{position:absolute;left:0;top:0;width:100%;pointer-events:none;z-index:2}
-  .looks-out{width:calc(25vw - 12.5px);margin-left:calc(25vw + 7.5px);overflow:hidden;transform:translate3d(-101%,0,0);transition:transform .3s cubic-bezier(.215,.61,.355,1)}
-  .looks-in{display:grid;transform:translate3d(101%,0,0);transition:transform .3s cubic-bezier(.215,.61,.355,1)}
-  .looks.on .looks-out,.looks.on .looks-in{transform:none}
+  .looks-out{width:calc(25vw - 12.5px);margin-left:calc(25vw + 7.5px);clip-path:inset(0 100% 0 0);transition:clip-path .3s cubic-bezier(.215,.61,.355,1)}
+  .looks-in{display:grid}
+  .looks.on .looks-out{clip-path:inset(0)}
   .look{grid-area:1 / 1;align-self:start;margin:0;overflow:hidden;background:var(--card);color:var(--fg);visibility:hidden}
   .look.cur{visibility:visible}
   .look.wipe{animation:look-in .3s cubic-bezier(.215,.61,.355,1) forwards}
-  .look.wipe > *{animation:look-in-inner .3s cubic-bezier(.215,.61,.355,1) forwards}
   .look.was{visibility:visible}
   .pic{position:relative;aspect-ratio:7/8;overflow:hidden;background:#fff}
   .pic img,.pic video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
@@ -264,8 +264,7 @@ main{position:relative;z-index:1}
   figcaption p{margin:0}
   figcaption .email{margin-top:.4em}
 }
-@keyframes look-in{from{transform:translate3d(-100%,0,0)}to{transform:none}}
-@keyframes look-in-inner{from{transform:translate3d(100%,0,0)}to{transform:none}}
+@keyframes look-in{from{clip-path:inset(0 100% 0 0)}to{clip-path:inset(0)}}
 
 /* ---------- phones: narrower margins, the menu stacks under itself on the right ---------- */
 @media (max-width:760px){
@@ -292,8 +291,8 @@ main{position:relative;z-index:1}
 
 @media (prefers-reduced-motion:reduce){
   html{scroll-behavior:auto}
-  .inner,.face,.flip,.flip img,.find .arrow,.row::before,.role,.looks-out,.looks-in{transition:none}
-  .look.wipe,.look.wipe > *{animation:none}
+  .inner,.face,.flip,.flip img,.find .arrow,.row::before,.role,.looks-out{transition:none}
+  .look.wipe{animation:none}
   .card:hover .inner{transform:none}
   .card.to-back .turn,.card.to-front .turn,.card.to-back .face,.card.to-front .face{animation:none}
 }
