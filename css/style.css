@@ -199,7 +199,8 @@ main{position:relative;z-index:1}
 }
 /* The details open downwards (a grid row growing from 0 to its content's height). They sit on the
    page grid: the specialisations large on the left, credentials and languages in the middle, the
-   email on the right margin under the name. All three start on one line (their first baselines meet). */
+   email on the right margin under the name. The two texts start on one line (their first baselines
+   meet); the email sits on the bottom margin. */
 .more{display:grid;grid-template-rows:0fr;transition:grid-template-rows .5s cubic-bezier(.215,.61,.355,1)}
 .member.open .more{grid-template-rows:1fr}
 .more-in{min-height:0;overflow:hidden}
@@ -207,7 +208,7 @@ main{position:relative;z-index:1}
 .member.open .more .grid{opacity:1;transition:opacity .4s ease .12s}
 .spec{grid-column:1 / span 2;font-size:var(--step-1);line-height:1.25;letter-spacing:-.01em;text-wrap:pretty}
 .facts{grid-column:3 / span 2;display:flex;flex-direction:column;gap:.6em;color:var(--on-accent-mute)}
-.mail{grid-column:5;justify-self:end;font-size:var(--step-1);line-height:1.25;letter-spacing:-.01em;transition:color .2s}
+.mail{grid-column:5;justify-self:end;align-self:end;font-size:var(--step-1);line-height:1.25;letter-spacing:-.01em;transition:color .2s}
 .mail:hover{color:#fff}
 .mail:focus-visible{outline:1px solid var(--on-ink);outline-offset:4px}
 .member ::selection{background:var(--on-ink);color:var(--accent)}
