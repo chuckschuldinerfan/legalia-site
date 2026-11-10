@@ -359,7 +359,15 @@
     }
     return { size, place, stop: hide };
   })();
-  const fitAll = () => { roster.size(); fitCards(); carousel.render(); };
+  /* The characteristics stay at step 5 unless the longest line would run past the right edge of its
+     columns (long Russian words, narrow screens); then they shrink just enough to fit. */
+  function fitTraits() {
+    const el = $('.traits-list');
+    el.style.fontSize = '';
+    const over = el.scrollWidth / el.clientWidth;
+    if (over > 1) el.style.fontSize = `${parseFloat(getComputedStyle(el).fontSize) / over * 0.99}px`;
+  }
+  const fitAll = () => { roster.size(); fitCards(); carousel.render(); fitTraits(); };
 
   /* ---------- "Meist" text types itself out the first time it comes into view ---------- */
   /* Quick on purpose (about 1.2s for the whole paragraph). Screen readers get the full text
@@ -485,9 +493,9 @@
   function onScroll() {
     ticking = false;
     const mid = innerHeight * 0.5;
-    const aboutTop = about.getBoundingClientRect().top;
+    const { top: aboutTop, bottom: aboutBottom } = about.getBoundingClientRect();
     const atBottom = scrollY + innerHeight >= document.documentElement.scrollHeight - 2;
-    const cur = atBottom ? 'kontakt' : aboutTop < mid ? 'meist' : null;
+    const cur = atBottom ? 'kontakt' : aboutTop < mid && aboutBottom > mid ? 'meist' : null;
     navLinks.forEach(a => (a.dataset.nav === cur ? a.setAttribute('aria-current', 'true') : a.removeAttribute('aria-current')));
     header.classList.toggle('at-hero', scrollY < innerHeight * 0.5);
     if (team.getBoundingClientRect().bottom < innerHeight * 0.25) stopAll();

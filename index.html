@@ -6,10 +6,10 @@
 <title>Legalia Advokaadibüroo</title>
 <meta name="theme-color" content="#f9f9f9">
 <link rel="icon" href="assets/logo.svg" type="image/svg+xml">
-<link rel="stylesheet" href="css/style.css?v=v2-35">
-<script src="js/i18n.js?v=v2-35" defer></script>
-<script src="js/main.js?v=v2-35" defer></script>
-<script src="js/intro.js?v=v2-35" defer></script>
+<link rel="stylesheet" href="css/style.css?v=v2-36">
+<script src="js/i18n.js?v=v2-36" defer></script>
+<script src="js/main.js?v=v2-36" defer></script>
+<script src="js/intro.js?v=v2-36" defer></script>
 </head>
 <body>
 <!-- All texts live in js/i18n.js. Elements here only carry their key (data-i18n for text, data-i18n-label for aria-label). -->
@@ -29,6 +29,20 @@
   <!-- First screen: the logo in the middle (main.js copies the header logo in here). -->
   <section class="hero"><div class="lockup"></div></section>
 
+  <!-- About: one sentence, medium size, in the middle of a black screen (it types itself in). -->
+  <section class="ink meist" id="meist" aria-labelledby="meist-h">
+    <h2 class="sr-only" id="meist-h" data-i18n="about.label"></h2>
+    <p class="about" data-i18n="about.text"></p>
+  </section>
+
+  <!-- Experience: a light page held on screen while the year turns from 1992 to this one, then released. -->
+  <section class="years" id="kogemus" aria-labelledby="kogemus-h">
+    <div class="pin">
+      <p class="year" aria-hidden="true"></p>
+      <div class="grid"><p class="lede" id="kogemus-h" data-i18n="experience.text"></p></div>
+    </div>
+  </section>
+
   <!-- The team: the cards slide in once, the first time the section comes into view. -->
   <section class="team" id="team" data-i18n-label="hero.label">
     <ul class="cards grid" id="cards" role="list"></ul>
@@ -44,22 +58,16 @@
       <div class="looks"><div class="looks-out"><div class="looks-in"></div></div></div>
     </div>
   </section>
-    </div>
-  </section>
 
-  <!-- Experience: a light page held on screen while the year turns from 1992 to this one, then released. -->
-  <section class="years" id="kogemus" aria-labelledby="kogemus-h">
-    <div class="pin">
-      <p class="year" aria-hidden="true"></p>
-      <div class="grid"><p class="lede" id="kogemus-h" data-i18n="experience.text"></p></div>
-    </div>
-  </section>
-
-  <!-- About: the description, large, at the top left. -->
-  <section class="ink meist" id="meist" aria-labelledby="meist-h">
+  <!-- Characteristics: the four words large on the left, two short texts small by the right margin. -->
+  <section class="traits" id="omadused" aria-labelledby="traits-h">
     <div class="grid">
-      <h2 class="sr-only" id="meist-h" data-i18n="about.label"></h2>
-      <p class="about" data-i18n="about.text"></p>
+      <h2 class="traits-h" id="traits-h" data-i18n="traits.title"></h2>
+      <p class="traits-list" data-i18n="traits.items"></p>
+      <div class="traits-side">
+        <p data-i18n="traits.text"></p>
+        <p data-i18n="traits.langs"></p>
+      </div>
     </div>
   </section>
 </main>

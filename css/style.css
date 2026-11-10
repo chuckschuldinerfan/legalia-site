@@ -25,6 +25,7 @@
   --step-0:clamp(13px, 12.31px + .192vw, 16px);              /* body */
   --step-1:clamp(16.25px, 14.46px + .497vw, 24px);           /* phone and email */
   --step-2:clamp(20.31px, 16.69px + 1.006vw, 36px);          /* about text */
+  --step-5:clamp(39.67px, 20.79px + 5.245vw, 121.5px);       /* the characteristics */
   /* The business cards are objects with their own proportions: their text scales with the card
      width rather than the page, between 10 and 13px (12px in the sideways row). */
   --card-text:clamp(10px, .8vw, 13px);
@@ -65,7 +66,7 @@ header.on-accent .menu a:hover,header.on-accent .menu button:hover,header.on-acc
 .menu a[aria-current="true"],.menu button[aria-pressed="true"]{color:#fff}
 .home:focus-visible,.menu a:focus-visible,.menu button:focus-visible{outline:1px solid #fff;outline-offset:3px}
 
-/* ---------- hero: the logo in the middle of the first screen; it scrolls away with the page, so hero and team read as one white page ---------- */
+/* ---------- hero: the logo in the middle of the first screen; it scrolls away with the page ---------- */
 .hero{position:relative;z-index:0;height:var(--screen);display:grid;place-items:center;background:var(--paper);color:var(--fg)}
 .lockup{width:clamp(240px, 46vw, 760px)}
 .lockup svg{display:block;width:100%;height:auto}
@@ -146,8 +147,8 @@ header.at-hero .home{opacity:0;pointer-events:none}
 /* ---------- dark sections: normal flow, stacked above the pinned hero ---------- */
 .ink{position:relative;z-index:1;background:var(--ink);color:var(--on-ink)}
 .label{color:var(--on-ink-mute)}
-/* Step 2 of the scale; main.js steps it down only if the page would not fit one screen (small phones, long translations). */
-.about{grid-column:1 / span 5;font-size:var(--step-2);line-height:1.12;letter-spacing:-.02em;max-width:24em;text-wrap:pretty}
+/* Step 2 of the scale, centred on its screen. */
+.about{max-width:22em;font-size:var(--step-2);line-height:1.12;letter-spacing:-.02em;text-align:center;text-wrap:balance}
 /* Typing reveal (main.js), the first time the section comes into view. The untyped rest of the text
    is already laid out but invisible, so lines never re-wrap while it types. The caret is a
    zero-width inline, which adds no break opportunity. */
@@ -159,9 +160,27 @@ header.at-hero .home{opacity:0;pointer-events:none}
 @keyframes caret-blink{0%{opacity:1}50%{opacity:0}}
 
 /* ---------- about ---------- */
-/* Black, the description large at the top left (the .about rule above). At least one screen tall,
-   so at the very bottom it reaches the top edge and the year page above never shows. */
-.meist{min-height:var(--screen);padding-block:110px 160px}
+/* Black, right after the first screen: one sentence in the middle of the screen (the .about rule above). */
+.meist{min-height:var(--screen);display:grid;place-items:center;padding:110px var(--gut-r) 110px var(--gut)}
+
+/* ---------- characteristics: the last page before the contacts ---------- */
+/* Light, at least one screen tall (so at the very bottom the team above never shows). The title small
+   and muted at the top left, the four words at step 5 on the bottom margin (main.js steps them down
+   only if the longest line would not fit), and the two short texts small by the right margin. */
+.traits{position:relative;z-index:1;background:var(--paper);color:var(--fg)}
+.traits .grid{min-height:var(--screen);grid-template-rows:auto 1fr;padding-block:110px calc(var(--gut) * 1.618);align-items:end}
+.traits-h{grid-column:1 / -1;align-self:start;font-size:var(--step-0);color:var(--mute)}
+.traits-list{grid-column:1 / span 4;min-width:0;margin-bottom:-.12em;font-size:var(--step-5);line-height:1;letter-spacing:-.035em;white-space:nowrap}
+.traits-side{grid-column:5;display:flex;flex-direction:column;gap:1.2em;font-size:var(--step-1);line-height:1.25;letter-spacing:-.01em;text-wrap:pretty}
+@media (max-width:1279px) and (min-width:761px){
+  .traits-list{grid-column:1 / span 3}
+  .traits-side{grid-column:4 / span 2}
+}
+@media (max-width:760px){
+  .traits .grid{grid-template-rows:auto 1fr auto;padding-top:96px}
+  .traits-list,.traits-side{grid-column:1 / -1}
+  .traits-side{margin-top:48px}
+}
 
 /* ---------- experience: a light page with the year ---------- */
 /* Three screens tall; its content sticks for the first two, so the page stays put while the scroll turns the
