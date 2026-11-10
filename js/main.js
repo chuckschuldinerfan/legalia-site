@@ -136,17 +136,16 @@
     if (over > 1) traits.style.fontSize = `${parseFloat(getComputedStyle(traits).fontSize) / over * 0.99}px`;
   }
   const fitAll = fitTraits;
-  // The first time the page is well in view, the words slide up from below one after the other,
-  // then the texts on the right.
-  const traitsSection = $('#omadused');
+  // The words slide up from below their lines one after the other, the first time they are well in
+  // view (not just the page: on a tall screen the page starts long before its words); the texts on
+  // the right do the same when they come into view.
   if ('IntersectionObserver' in window && !reduceMotion.matches) {
-    traitsSection.classList.add('hold');
-    const io = new IntersectionObserver(es => {
-      if (!es.some(e => e.isIntersecting)) return;
-      io.disconnect();
-      traitsSection.classList.replace('hold', 'shown');
-    }, { threshold: 0.35 });
-    io.observe(traitsSection);
+    const io = new IntersectionObserver(es => es.forEach(e => {
+      if (!e.isIntersecting) return;
+      io.unobserve(e.target);
+      e.target.classList.replace('hold', 'shown');
+    }), { threshold: 0.5 });
+    [traits, $('.traits-side')].forEach(el => { el.classList.add('hold'); io.observe(el); });
   }
 
   /* ---------- "Meist" text types itself out the first time it comes into view ---------- */
