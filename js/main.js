@@ -66,19 +66,19 @@
 
   // The decode: every letter flickers through random characters and settles on its own, a little
   // later than the one before it; the word grows or shrinks to the new length on the way.
-  const GLYPHS = { et: 'ABDEFGHIJKLMNOPRSTUVÕÄÖÜ#%&/+', en: 'ABCDEFGHIJKLMNOPRSTUVWXYZ#%&/+', ru: 'АБВГДЕЖЗИКЛМНОПРСТУФХЦЧШЭЮЯ#%&/+' };
+  const GLYPHS = { et: 'ABDEFGHIJKLMNOPRSTUVÕÄÖÜ', en: 'ABCDEFGHIJKLMNOPRSTUVWXYZ', ru: 'АБВГДЕЖЗИКЛМНОПРСТУФХЦЧШЭЮЯ' }; // letters only
   function scramble(el, to) {
     cancelAnimationFrame(el.scrambling);
     const from = el.textContent;
     if (from === to) return;
     if (reduceMotion.matches || !from) { el.textContent = to; return; }
-    const settle = [...to].map((_, i) => 120 + i * 32 + Math.random() * 90); // ms after the start
+    const settle = [...to].map((_, i) => 40 + i * 16 + Math.random() * 50); // ms after the start: about 0.3s in all
     const end = Math.max(...settle), t0 = performance.now();
     const glyphs = GLYPHS[lang];
     let last = 0;
     const step = now => {
       const t = now - t0;
-      if (now - last > 45 || t >= end) { // a new random letter about 20 times a second: calm, not frantic
+      if (now - last > 40 || t >= end) { // a new random letter about 25 times a second: calm, not frantic
         last = now;
         const len = Math.round(from.length + (to.length - from.length) * Math.min(1, t / end));
         let out = '';

@@ -104,7 +104,7 @@ header.at-hero .home{opacity:0;pointer-events:none}
 .traits{position:relative;z-index:1;background:var(--paper);color:var(--fg)}
 .traits .grid{min-height:var(--screen);grid-template-rows:auto 1fr;padding-block:var(--head) var(--foot);align-items:end}
 .traits-h{grid-column:1 / -1;align-self:start}
-.traits-list{grid-column:1 / span 3;min-width:0;font-size:var(--step-5);line-height:1;letter-spacing:-.035em;white-space:nowrap}
+.traits-list{grid-column:1 / span 3;min-width:0;font-size:var(--step-5);font-weight:500;line-height:1;letter-spacing:-.035em;white-space:nowrap}
 /* Each line is a window the word slides up into; the padding keeps descenders and accents inside it. */
 .ln{display:block;overflow:hidden;padding-block:.06em .16em;margin-block:-.06em -.16em}
 .ln > span{display:inline-block}
