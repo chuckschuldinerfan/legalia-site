@@ -101,25 +101,25 @@ header.at-hero .home{opacity:0;pointer-events:none}
 /* Light, at least one screen tall (so at the very bottom the team above never shows). The title small
    and muted at the top left, the four words at step 5 on the bottom margin (main.js steps them down
    only if the longest line would not fit), and the two short texts small by the right margin. */
-.traits{position:relative;z-index:1;background:var(--paper);color:var(--fg)}
+.traits{position:relative;z-index:1;overflow:clip;background:var(--paper);color:var(--fg)}
 .traits .grid{min-height:var(--screen);grid-template-rows:auto 1fr;padding-block:var(--head) var(--foot);align-items:end}
 .traits-h{grid-column:1 / -1;align-self:start}
 .traits-list{grid-column:1 / span 3;min-width:0;font-size:var(--step-5);font-weight:500;line-height:1;letter-spacing:-.035em;white-space:nowrap}
-/* Each line is a window the word slides up into; the padding keeps descenders and accents inside it. */
-.ln{display:block;overflow:hidden;padding-block:.06em .16em;margin-block:-.06em -.16em}
+.ln{display:block}
 .ln > span{display:inline-block}
 /* By the right margin, its last line on the bottom margin like the words'. */
 .traits-side{grid-column:4 / span 2;justify-self:end;width:min(100%, 26em);display:flex;flex-direction:column;gap:1.2em;margin-bottom:.16em;font-size:var(--step-1);line-height:1.25;letter-spacing:-.01em;text-wrap:pretty}
-.up{overflow:hidden}
 .up > span{display:block}
-/* Slide up: held below their windows until they are in view (main.js), then one after the other. */
-.hold .ln > span,.hold .up > span{transform:translateY(110%)}
-.shown .ln > span,.shown .up > span{transition:transform 1.2s cubic-bezier(.19,1,.22,1)}
-.shown .ln:nth-child(2) > span{transition-delay:.12s}
-.shown .ln:nth-child(3) > span{transition-delay:.24s}
-.shown .ln:nth-child(4) > span{transition-delay:.36s}
-.shown .up:nth-child(1) > span{transition-delay:.2s}
-.shown .up:nth-child(2) > span{transition-delay:.32s}
+/* Slide in: the words wait a full screen below their places, off the page, and when they come into
+   view (main.js) they travel up into it one after the other; then the texts on the right. The page
+   clips them, so while they wait they add nothing to its height. */
+.hold .ln > span,.hold .up > span{transform:translateY(100vh)}
+.shown .ln > span,.shown .up > span{transition:transform 1.4s cubic-bezier(.16,1,.3,1)}
+.shown .ln:nth-child(2) > span{transition-delay:.1s}
+.shown .ln:nth-child(3) > span{transition-delay:.2s}
+.shown .ln:nth-child(4) > span{transition-delay:.3s}
+.shown .up:nth-child(1) > span{transition-delay:.35s}
+.shown .up:nth-child(2) > span{transition-delay:.45s}
 @media (max-width:760px){
   .traits .grid{grid-template-rows:auto 1fr auto}
   .traits-list,.traits-side{grid-column:1 / -1}

@@ -136,15 +136,15 @@
     if (over > 1) traits.style.fontSize = `${parseFloat(getComputedStyle(traits).fontSize) / over * 0.99}px`;
   }
   const fitAll = fitTraits;
-  // The words slide up from below their lines one after the other, the first time they are well in
-  // view (not just the page: on a tall screen the page starts long before its words); the texts on
-  // the right do the same when they come into view.
+  // The words slide into the page from below one after the other, the first time their places are
+  // well in view (not just the page: on a tall screen the page starts long before its words); the
+  // texts on the right do the same. Only the inner spans move, so the observed boxes stay put.
   if ('IntersectionObserver' in window && !reduceMotion.matches) {
     const io = new IntersectionObserver(es => es.forEach(e => {
       if (!e.isIntersecting) return;
       io.unobserve(e.target);
       e.target.classList.replace('hold', 'shown');
-    }), { threshold: 0.5 });
+    }), { threshold: 0.4 });
     [traits, $('.traits-side')].forEach(el => { el.classList.add('hold'); io.observe(el); });
   }
 
