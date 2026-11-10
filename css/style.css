@@ -2,7 +2,7 @@
    Layout: one 5-column grid, set by the five team cards, carries the header, the cards and the dark sections. */
 :root{
   --paper:#f9f9f9;       /* hero ground */
-  --card:#ffffff;        /* business cards */
+  --card:#ffffff;        /* the person cards */
   --ink:#121212;         /* dark sections that slide over the hero */
   --fg:#111111;          /* text on paper */
   --mute:#a3a3a3;        /* secondary text on paper */
@@ -14,9 +14,6 @@
   --gut:max(24px, env(safe-area-inset-left, 0px));
   --gut-r:max(24px, env(safe-area-inset-right, 0px));
   --gap:12px;
-  /* The cards stand off the bottom edge by the same margin as the sides (24px, 16px on phones),
-     so the row is framed evenly on three sides. */
-  --lift:var(--gut);
 
   /* Type scale. One fluid modular scale: at a 360px screen it is 13px x 1.25 per step, at 1920px
      it is 16px x 1.5 per step, and in between every step grows in a straight line with the width.
@@ -26,9 +23,6 @@
   --step-1:clamp(16.25px, 14.46px + .497vw, 24px);           /* phone and email */
   --step-2:clamp(20.31px, 16.69px + 1.006vw, 36px);          /* about text */
   --step-5:clamp(39.67px, 20.79px + 5.245vw, 121.5px);       /* the characteristics */
-  /* The business cards are objects with their own proportions: their text scales with the card
-     width rather than the page, between 10 and 13px (12px in the sideways row). */
-  --card-text:clamp(10px, .8vw, 13px);
   --screen:100vh;
   --hero-min:620px;
   --ease:cubic-bezier(.2,.75,.2,1);
@@ -46,6 +40,7 @@ a{color:inherit;text-decoration:none}
 ::selection{background:var(--fg);color:var(--paper)}
 .ink ::selection{background:var(--on-ink);color:var(--ink)}
 .contact ::selection{color:var(--accent)}
+.g{color:var(--mute)}
 .sr-only{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip-path:inset(50%);white-space:nowrap;border:0}
 .grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));column-gap:var(--gap);padding-left:var(--gut);padding-right:var(--gut-r)}
 .small{font-size:var(--step--1);letter-spacing:.03em;text-transform:uppercase;line-height:1.45}
@@ -73,76 +68,6 @@ header.on-accent .menu a:hover,header.on-accent .menu button:hover,header.on-acc
 /* The header logo hides while the big one is on screen. */
 header .home{transition:opacity .4s}
 header.at-hero .home{opacity:0;pointer-events:none}
-
-/* ---------- team: the row of cards in the vertical middle of its own screen ---------- */
-.team{position:relative;z-index:1;height:var(--hero-h);background:var(--paper)}
-.cards{position:absolute;left:0;right:0;top:50%;margin:0;list-style:none;align-items:end;translate:0 -50%}
-.card{position:relative;aspect-ratio:55/85;max-height:calc(var(--hero-h) - 2 * 90px);font-size:var(--card-text);line-height:1.45;letter-spacing:.01em}
-/* Two layers, so the two motions never fight:
-   .inner  - lifts the card a little on hover
-   .turn   - the flip, one continuous 180deg turn.
-   No preserve-3d and no backface-visibility: Safari and Firefox mishandle both when a face holds a
-   video or a photo layer. Instead each face is shown or hidden by the same animation that turns
-   the card, at the exact moment it is edge-on (90deg), and the back is mirrored in 2D so it reads
-   the right way round once turned. */
-.inner{position:absolute;inset:0;perspective:1600px;transition:transform .5s var(--ease)}
-.turn{position:absolute;inset:0}
-.card.flipped .turn{transform:rotateY(180deg)}
-.back{transform:scaleX(-1)}
-/* Quick start, long settle: the first quarter of the time covers the first 90deg at constant
-   speed, the rest eases out from that same speed, so the motion is one piece. */
-.card.to-back .turn{animation:turn-to-back .8s both}
-.card.to-front .turn{animation:turn-to-front .8s both}
-.card.to-back .front,.card.to-front .back{animation:face-out .8s both}
-.card.to-back .back,.card.to-front .front{animation:face-in .8s both}
-@keyframes turn-to-back{0%{transform:rotateY(0deg);animation-timing-function:linear}25%{transform:rotateY(90deg);animation-timing-function:cubic-bezier(.1,.3,.25,1)}100%{transform:rotateY(180deg)}}
-@keyframes turn-to-front{0%{transform:rotateY(180deg);animation-timing-function:linear}25%{transform:rotateY(90deg);animation-timing-function:cubic-bezier(.1,.3,.25,1)}100%{transform:rotateY(0deg)}}
-/* The swap animates opacity, not visibility: phones run the turn on the GPU, and only opacity runs
-   there in step with it (a visibility swap runs on the main thread and can lag a frame, letting the
-   photo flash through mid-turn). During a turn both faces stay "visible"; opacity does the hiding. */
-@keyframes face-out{0%,24.9%{opacity:1}25%,100%{opacity:0}}
-@keyframes face-in{0%,24.9%{opacity:0}25%,100%{opacity:1}}
-.face{position:absolute;inset:0;overflow:hidden;background:var(--card);box-shadow:0 1px 2px rgba(0,0,0,.04),0 10px 26px -12px rgba(0,0,0,.14);transition:box-shadow .5s}
-.card.flipped .front,.card:not(.flipped) .back{visibility:hidden}
-.card.to-back .face,.card.to-front .face{visibility:visible}
-.who{position:absolute;top:1.9em;left:1.9em;right:1.9em}
-.g,.who .g{color:var(--mute)}
-/* Photo and video share one box at the bottom; the video only shows while it is actually playing. */
-.front picture img,.front video{position:absolute;left:0;bottom:0;width:100%;height:auto;aspect-ratio:7/8;display:block}
-.front video{opacity:0}
-.card.is-playing .front video{opacity:1}
-.card.is-playing .front picture img{visibility:hidden}
-.card.flipped .front video,.front video[hidden]{display:none}
-.bio{position:absolute;top:1.9em;left:1.9em;right:1.9em}
-.bio .lead{margin-top:4.6em}
-.bio p+p{margin-top:1.2em}
-/* Flip control: a small text button on the name line, gray at rest, black on hover and press.
-   The padding (cancelled by the negative margin) makes the tap area larger than the text. */
-.flip{position:absolute;top:1.9em;right:1.9em;z-index:1;display:inline-flex;align-items:center;gap:.45em;margin:-.6em;padding:.6em;border:0;background:none;font:inherit;line-height:inherit;letter-spacing:inherit;color:var(--mute);white-space:nowrap;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:color .2s}
-.flip img{width:1em;height:1em;flex:none;opacity:.38;transition:opacity .2s,transform .3s var(--ease)}
-.back .flip img{transform:scaleX(-1)}
-.flip:hover,.flip:active,.flip:focus-visible{color:var(--fg)}
-.flip:hover img,.flip:active img,.flip:focus-visible img{opacity:1}
-.front .flip:hover img{transform:translateX(.15em)}
-.back .flip:hover img{transform:scaleX(-1) translateX(.15em)}
-.flip:focus{outline:none}
-.flip:focus-visible{outline:1px solid var(--fg);outline-offset:-.2em}
-/* With a mouse, the button only appears while the card is hovered (or reached with the keyboard).
-   Touch screens have no hover, so there it always shows. */
-@media (hover:hover){
-  .flip{opacity:0;transition:color .2s,opacity .3s}
-  .card:hover .flip,.flip:focus-visible{opacity:1}
-}
-/* Set by main.js only where needed: the flip buttons drop to their own line under the title when a name is too long,
-   and bios that would run into the email lose some spacing first. */
-.cards.flip-low .flip{top:calc(1.9em + 2.9em + .9em)}
-.card.tight .bio .lead{margin-top:2.8em}
-.card.tight .bio p+p{margin-top:.9em}
-.mail{position:absolute;left:1.9em;right:1.9em;bottom:1.9em}
-@media (hover:hover){
-  .card:hover .inner{transform:translateY(-8px)}
-  .card:hover .face{box-shadow:0 2px 4px rgba(0,0,0,.05),0 34px 50px -22px rgba(0,0,0,.3)}
-}
 
 /* ---------- dark sections: normal flow, stacked above the pinned hero ---------- */
 .ink{position:relative;z-index:1;background:var(--ink);color:var(--on-ink)}
@@ -222,74 +147,85 @@ main{position:relative;z-index:1}
 .foot p{grid-column:1 / -1;display:flex;align-items:center;gap:.25em}
 .foot .copy{width:1.05em;height:1.05em;flex:none}
 
-/* ---------- up to 1279px: five cards in a row get too narrow for the bios, so they scroll sideways ---------- */
-/* A card is never narrower than 250px (the longest bio fits at that width); otherwise it is as tall as the screen allows. */
-@media (max-width:1279px){
-  :root{--card-min:250px;--card-text:12px}
-  html[lang=en]{--card-min:270px}
-  html[lang=ru]{--card-min:290px}
-  .cards{display:flex;gap:var(--gap);overflow-x:auto;overscroll-behavior-x:contain;scroll-snap-type:x mandatory;scroll-padding-inline:var(--gut) var(--gut-r);scrollbar-width:none}
-  .cards::-webkit-scrollbar{display:none}
-  .card{flex:0 0 max(var(--card-min), min(clamp(var(--card-min),64vw,300px), calc((min(var(--hero-h), var(--screen)) - 110px - var(--lift)) * 55 / 85)));scroll-snap-align:start;max-height:none}
-}
-/* tablet: the menu needs a little more than one card's width, so it takes the last two columns */
+/* tablet: the menu needs a little more than one column's width, so it takes the last two */
 @media (max-width:1279px) and (min-width:761px){
   .menu{grid-column:4 / span 2}
 }
 
-/* ---------- from 761px: the team as a list of names ---------- */
+/* ---------- the team: a list of names ---------- */
 /* After the team list on k72.ca/en/about, at its sizes (measured at 1440px wide: rows 74px with a
-   1px line, the role 16px top left, the name 40px uppercase on the right; the fill 0.3s, the picture
-   a quarter of the width, one quarter in, sliding in from the left in 0.3s). Black like theirs, the
-   fill in the accent instead of their lime, and instead of their tall photo a smaller card: the
-   photo (its clip plays once) with the person's description under it. main.js (roster) builds it.
-   Phones keep the business cards. */
-.roster{display:none}
-@media (min-width:761px){
-  .team{height:auto;min-height:var(--hero-h);background:var(--ink);color:var(--on-ink)}
-  .team ::selection{background:var(--on-ink);color:var(--ink)}
-  .team .cards{display:none}
-  .roster{position:relative;display:flex;flex-direction:column;justify-content:space-between;gap:80px;min-height:var(--hero-h);padding-block:110px calc(var(--gut) * 1.618)}
-  .roster-top{align-items:start}
-  .roster-h{grid-column:1;margin:0;font-size:var(--step-0);font-weight:400;color:var(--on-ink-mute)}
-  .roster-p{grid-column:1 / -1;margin:.6em 0 0;max-width:24em;font-size:var(--step-2);line-height:1.12;letter-spacing:-.02em;text-wrap:pretty}
-  .rows{margin:0;padding:0;list-style:none}
-  .row{position:relative;z-index:0;display:flex;justify-content:space-between;align-items:center;gap:24px;padding:10px var(--gut-r) 10px var(--gut);border-top:1px solid;cursor:default;outline:none}
-  .row:last-child{border-bottom:1px solid}
-  .row::before{content:"";position:absolute;inset:0;z-index:-1;background:var(--accent);transform:scaleY(0);transform-origin:center top;transition:transform .3s cubic-bezier(.215,.61,.355,1)}
-  .row:hover::before,.row:focus-visible::before{transform:none}
-  .role{align-self:flex-start;color:var(--on-ink-mute);transition:color .3s cubic-bezier(.215,.61,.355,1)}
-  .row:hover .role,.row:focus-visible .role{color:var(--on-accent-mute)}
-  .row .nm{padding-block:10px;margin-bottom:-.2em;font-size:clamp(28px, 2.78vw, 48px);line-height:1;text-transform:uppercase;white-space:nowrap}
-  /* The card: placed over the list by main.js (in the middle of the screen, kept inside the section).
-     It is uncovered in place from left to right (theirs does this with two boxes sliding against
-     each other; a mask gives the same picture and can never shift the card when moves overlap);
-     changing person uncovers the new card the same way over the old one. */
-  .looks{position:absolute;left:0;top:0;width:100%;pointer-events:none;z-index:2}
-  .looks-out{width:calc(25vw - 12.5px);margin-left:calc(25vw + 7.5px);clip-path:inset(0 100% 0 0);transition:clip-path .3s cubic-bezier(.215,.61,.355,1)}
-  .looks-in{display:grid}
-  .looks.on .looks-out{clip-path:inset(0 0 0 0)}
-  .look{grid-area:1 / 1;align-self:start;margin:0;overflow:hidden;border-radius:12px;background:var(--card);color:var(--fg);visibility:hidden}
-  .look.cur{visibility:visible}
-  .look.wipe{animation:look-in .3s cubic-bezier(.215,.61,.355,1) forwards}
-  .look.was{visibility:visible}
-  .pic{position:relative;aspect-ratio:7/8;overflow:hidden;background:#fff}
-  .pic img,.pic video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
-  .pic video{opacity:0}
-  .look.is-playing .pic video{opacity:1}
-  /* Everyone is framed differently in their photo; each is scaled (from the bottom) and centred so
-     the shoulders end 6% from both sides of the card (measured from the photos; the clips share the framing). */
-  .pic img,.pic video{transform:var(--fit, none);transform-origin:50% 100%}
-  .look[data-id=aivar] .pic{--fit:translateX(0.00%) scale(0.880)}
-  .look[data-id=dragan] .pic{--fit:translateX(-0.98%) scale(0.915)}
-  .look[data-id=henrik] .pic{--fit:translateX(-0.13%) scale(0.883)}
-  .look[data-id=gert] .pic{--fit:translateX(0.00%) scale(0.880)}
-  .look[data-id=piret] .pic{--fit:translateX(-0.42%) scale(0.975)}
-  figcaption{display:flex;flex-direction:column;gap:.7em;padding:16px 16px 18px;font-size:var(--step-0);line-height:1.2}
-  figcaption p{margin:0}
-  figcaption .email{margin-top:.4em}
-}
-@keyframes look-in{from{clip-path:inset(0 100% 0 0 round 12px)}to{clip-path:inset(0 round 12px)}}
+   1px line, the role 16px top left, the name 40px uppercase on the right; the fill 0.3s). Black like
+   theirs, the fill in the accent instead of their lime. Every row is a button that opens the card. */
+.team{position:relative;z-index:1;min-height:var(--hero-h);background:var(--ink);color:var(--on-ink)}
+.team ::selection{background:var(--on-ink);color:var(--ink)}
+.roster{position:relative;display:flex;flex-direction:column;justify-content:space-between;gap:80px;min-height:var(--hero-h);padding-block:110px calc(var(--gut) * 1.618)}
+.roster-top{align-items:start}
+.roster-h{grid-column:1;margin:0;font-size:var(--step-0);font-weight:400;color:var(--on-ink-mute);white-space:nowrap}
+.roster-p{grid-column:1 / -1;margin:.6em 0 0;max-width:24em;font-size:var(--step-2);line-height:1.12;letter-spacing:-.02em;text-wrap:pretty}
+.rows{margin:0;padding:0;list-style:none}
+.row{all:unset;box-sizing:border-box;position:relative;z-index:0;display:flex;width:100%;justify-content:space-between;align-items:center;gap:24px;padding:10px var(--gut-r) 10px var(--gut);border-top:1px solid;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.rows li:last-child .row{border-bottom:1px solid}
+.row::before{content:"";position:absolute;inset:0;z-index:-1;background:var(--accent);transform:scaleY(0);transform-origin:center top;transition:transform .3s cubic-bezier(.215,.61,.355,1)}
+.row:hover::before,.row:focus-visible::before{transform:none}
+.role{align-self:flex-start;color:var(--on-ink-mute);transition:color .3s cubic-bezier(.215,.61,.355,1)}
+.row:hover .role,.row:focus-visible .role{color:var(--on-accent-mute)}
+.row .nm{padding-block:10px;margin-bottom:-.2em;font-size:clamp(28px, 2.78vw, 48px);line-height:1;text-transform:uppercase;white-space:nowrap}
+
+/* ---------- one person's card, opened over the blurred page ---------- */
+/* A modal dialog: the page behind is blurred and dimmed a little, so the white card stands out. The
+   card is uncovered from left to right like the rows fill (0.3s); closing fades it out. No rounded
+   corners. Its width is held so the whole card fits the screen height; a very long description
+   scrolls inside it. */
+.person{position:fixed;inset:0;width:100%;height:100%;max-width:none;max-height:none;margin:0;padding:var(--gut);border:0;background:none;display:none;place-items:center;overflow:hidden}
+.person[open]{display:grid}
+.person::backdrop{background:rgba(18,18,18,.3);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px)}
+.person[open]::backdrop{animation:fade-in .3s ease both}
+.person[open] .sheet{animation:sheet-in .3s cubic-bezier(.215,.61,.355,1) both}
+.person.closing::backdrop,.person.closing .sheet{animation:fade-out .2s ease both}
+@keyframes sheet-in{from{clip-path:inset(0 100% 0 0)}to{clip-path:inset(0)}}
+@keyframes fade-in{from{opacity:0}}
+@keyframes fade-out{to{opacity:0}}
+.sheet{width:min(100%, 440px, calc((100svh - 2 * var(--gut) - 280px) * 7 / 8));min-width:min(100%, 300px);max-height:calc(100svh - 2 * var(--gut));overflow-y:auto;overscroll-behavior:contain;scrollbar-width:none;background:var(--card);color:var(--fg);box-shadow:0 40px 80px -30px rgba(0,0,0,.45)}
+.sheet::-webkit-scrollbar{display:none}
+.sheet ::selection{background:var(--fg);color:var(--card)}
+.pic{position:relative;aspect-ratio:7/8;overflow:hidden;background:#fff}
+.pic img,.pic video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
+.pic video{opacity:0}
+.person.is-playing .pic video{opacity:1}
+/* Everyone is framed differently in their photo; each is scaled (from the bottom) and centred so
+   the shoulders end 6% from both sides of the card (measured from the photos; the clips share the framing). */
+.pic img,.pic video{transform:var(--fit, none);transform-origin:50% 100%}
+.person[data-id=aivar] .pic{--fit:translateX(0.00%) scale(0.880)}
+.person[data-id=dragan] .pic{--fit:translateX(-0.98%) scale(0.915)}
+.person[data-id=henrik] .pic{--fit:translateX(-0.13%) scale(0.883)}
+.person[data-id=gert] .pic{--fit:translateX(0.00%) scale(0.880)}
+.person[data-id=piret] .pic{--fit:translateX(-0.42%) scale(0.975)}
+.info{display:flex;flex-direction:column;gap:.7em;padding:18px 18px 20px;font-size:var(--step-0);line-height:1.25}
+.info .top{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:.5em}
+.info h2{font-size:var(--step-1);line-height:1.15;letter-spacing:-.01em}
+.info h2 .g{font-size:var(--step-0)}
+.info .email{margin-top:.4em;width:max-content;max-width:100%;overflow-wrap:anywhere;transition:color .2s}
+.info .email:hover{color:var(--mute)}
+/* Close: a small text button, gray at rest, black on hover and press (like the menu). The padding,
+   cancelled by the negative margin, makes the tap area larger than the text. */
+.close{all:unset;margin:-.6em;padding:.6em;font-size:var(--step--1);letter-spacing:.03em;text-transform:uppercase;color:var(--mute);cursor:pointer;-webkit-tap-highlight-color:transparent;transition:color .2s}
+.close:hover,.close:active{color:var(--fg)}
+.close:focus-visible{color:var(--fg);outline:1px solid var(--fg);outline-offset:-.2em}
+.info .email:focus-visible{outline:1px solid var(--fg);outline-offset:3px}
+/* While the card is open the page underneath stays put. */
+html.modal-open{overflow:hidden}
+
+/* ---------- the blur under the top bar ---------- */
+/* Like the bar over Instagram's comments: four stacked blurs, each a little stronger and reaching a
+   little less far down, so the blur is strongest at the top edge and fades out towards the bottom. */
+.veil{position:fixed;inset:0 0 auto;z-index:49;height:var(--veil-h, 96px);pointer-events:none}
+.veil i{position:absolute;inset:0}
+.veil i:nth-child(1){-webkit-backdrop-filter:blur(1px);backdrop-filter:blur(1px);-webkit-mask-image:linear-gradient(#000 55%, transparent);mask-image:linear-gradient(#000 55%, transparent)}
+.veil i:nth-child(2){-webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px);-webkit-mask-image:linear-gradient(#000 40%, transparent 80%);mask-image:linear-gradient(#000 40%, transparent 80%)}
+.veil i:nth-child(3){-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);-webkit-mask-image:linear-gradient(#000 25%, transparent 60%);mask-image:linear-gradient(#000 25%, transparent 60%)}
+.veil i:nth-child(4){-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);-webkit-mask-image:linear-gradient(#000 10%, transparent 40%);mask-image:linear-gradient(#000 10%, transparent 40%)}
+.intro ~ .veil{opacity:0}
+.intro.landed ~ .veil{opacity:1;transition:opacity .8s ease}
 
 /* ---------- phones: narrower margins, the menu stacks under itself on the right ---------- */
 @media (max-width:760px){
@@ -298,28 +234,15 @@ main{position:relative;z-index:1}
   .menu{grid-column:2;flex-direction:column;align-items:flex-end;gap:4px}
   .logo{height:22px}
   .reach,.place{grid-column:1 / -1;justify-self:start}
-  /* Endless carousel, like legalia.ee without the arrows: one card centered, its neighbours peeking
-     in at both sides, a swipe moves exactly one card and it loops in both directions. main.js
-     places every card with --x (its offset from the center); vertical swipes still scroll the page.
-     78% of the screen leaves room for the flip button beside the name. */
-  :root{--card-w:min(78vw, 320px)}
-  .team{overflow-x:clip}
-  .cards.grid{display:block;height:calc(var(--card-w) * 85 / 55);padding:0;overflow:visible;scroll-snap-type:none;touch-action:pan-y}
-  .cards .card{position:absolute;left:50%;bottom:0;width:var(--card-w);max-height:none;margin-left:calc(var(--card-w) / -2);transform:translate3d(var(--x, 0px), 0, 0)}
-  .cards.dragging{-webkit-user-select:none;user-select:none}
+  :root{--veil-h:104px}
+  /* The role above the name, both on the left: the names are too long for one line beside it. */
+  .row{flex-direction:column;align-items:flex-start;gap:4px;padding-block:14px 12px}
+  .row .nm{padding-block:0;white-space:normal}
 }
-/* The smallest phones (under 360px): a slightly wider card and 11px card text keep the flip button
-   on the name line, as everywhere else. */
-@media (max-width:359px){
-  :root{--card-w:84vw;--card-text:11px}
-}
-
 @media (prefers-reduced-motion:reduce){
   html{scroll-behavior:auto}
-  .inner,.face,.flip,.flip img,.find .arrow,.row::before,.role,.looks-out{transition:none}
-  .look.wipe{animation:none}
-  .card:hover .inner{transform:none}
-  .card.to-back .turn,.card.to-front .turn,.card.to-back .face,.card.to-front .face{animation:none}
+  .find .arrow,.row::before,.role,.close,.info .email{transition:none}
+  .person[open]::backdrop,.person[open] .sheet{animation:none}
 }
 
 /* ---------- opening ---------- */

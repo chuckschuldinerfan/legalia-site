@@ -1,4 +1,4 @@
-/* Legalia: card rendering, flip and video behaviour, menu state and the language switch.
+/* Legalia: the team list and its cards, the experience year, menu state and the language switch.
    Plain JavaScript, no dependencies. All texts come from js/i18n.js. */
 (() => {
   'use strict';
@@ -40,324 +40,80 @@
     document.title = text('meta.title').value;
     $$('[data-i18n]').forEach(el => put(el, el.dataset.i18n));
     $$('[data-i18n-label]').forEach(el => el.setAttribute('aria-label', text(el.dataset.i18nLabel).value));
-    $$('.card').forEach(labelCard);
     typer.prepare();
     fitAll();
     $$('[data-lang]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.lang === lang)));
     try { localStorage.setItem('legalia-lang', lang); } catch (e) { /* storage blocked: the choice just isn't remembered */ }
   }
 
-  /* ---------- cards ---------- */
-
-  const list = $('#cards');
-  const tpl = $('#card-tpl');
-
-  TEAM.forEach((id, i) => {
-    const card = tpl.content.firstElementChild.cloneNode(true);
-    card.dataset.id = id;
-    $$('[data-k]', card).forEach(el => {
-      if (el.dataset.k === 'email') el.textContent = `${id}@legalia.ee`;
-      else el.dataset.i18n = `team.${id}.${el.dataset.k}`;
+  /* ---------- the team: a list of names; pressing one opens that person's card ---------- */
+  /* The rows are buttons (after the k72.ca/en/about list: pointing at one fills it with the accent).
+     Pressing a row opens the card in a modal dialog over the blurred page: the photo (its clip plays
+     once) with the name and the description under it. Esc, the close button or a press outside closes
+     it, and focus goes back to the row. */
+  const team = (() => {
+    const rows = $('#roster .rows'), rowTpl = $('#row-tpl');
+    const dlg = $('#person'), sheet = $('.sheet', dlg), video = $('video', dlg);
+    let current = null, closing = 0;
+    TEAM.forEach(id => {
+      const li = rowTpl.content.firstElementChild.cloneNode(true);
+      const row = $('.row', li);
+      row.dataset.id = id;
+      $$('[data-k]', li).forEach(k => (k.dataset.i18n = `team.${id}.${k.dataset.k}`));
+      rows.append(li);
     });
-    const front = $('.front', card), back = $('.back', card);
-    front.id = `photo-${id}`;
-    back.id = `bio-${id}`;
-    $('.front .flip', card).setAttribute('aria-controls', back.id);
-    $('.back .flip', card).setAttribute('aria-controls', front.id);
-    $('source', card).srcset = `${ASSETS}img/${id}.webp`;
-    const img = $('picture img', card);
-    img.src = `${ASSETS}img/${id}.png`;
-    // The first two cards are on screen everywhere; the rest sit off to the side on phones.
-    img.loading = i < 2 ? 'eager' : 'lazy';
-    $('video', card).dataset.src = `${ASSETS}video/${id}.mp4?v=2`;
-    list.append(card);
-    setupCard(card);
-  });
-
-  // Each face has its own flip button; its label names the person so it makes sense out of context.
-  /* ---------- phones: endless one-card carousel (like legalia.ee, without arrows) ---------- */
-  /* Every card sits at --x = its distance from the center, wrapped so the row loops both ways:
-     left of the first card comes the last one. A horizontal swipe moves exactly one card; a
-     vertical swipe is left to the browser (touch-action: pan-y) and scrolls the page. */
-  const phone = matchMedia('(max-width: 760px)');
-  const carousel = (() => {
-    const cards = $$('.card', list), n = cards.length;
-    let pos = 0, anim = 0, active = -1;
-    const pitch = () => cards[0].offsetWidth + 12;                              // card width + gap
-    const wrap = d => ((((d + n / 2) % n) + n) % n) - n / 2;                     // into [-n/2, n/2)
-    const index = () => ((Math.round(pos) % n) + n) % n;
-    function render() {
-      if (!phone.matches) return;
-      const w = pitch();
-      cards.forEach((c, i) => c.style.setProperty('--x', `${(wrap(i - pos) * w).toFixed(2)}px`));
+    // The card's fields point at the open person's texts, so a language change re-fills them too.
+    function fill(id) {
+      $$('[data-k]', dlg).forEach(k => {
+        if (k.dataset.k === 'email') { k.textContent = `${id}@legalia.ee`; k.href = `mailto:${id}@legalia.ee`; }
+        else { k.dataset.i18n = `team.${id}.${k.dataset.k}`; put(k, k.dataset.i18n); }
+      });
+      dlg.dataset.id = id;
+      $('source', dlg).srcset = `${ASSETS}img/${id}.webp`;
+      $('img', dlg).src = `${ASSETS}img/${id}.png`;
+      stopClip();
+      video.removeAttribute('src'); video.load();
+      video.dataset.src = `${ASSETS}video/${id}.mp4?v=2`;
     }
-    function settle() {
-      const k = index();
-      if (k === active) return;
-      active = k;
-      cards.forEach((c, i) => (i === k ? c.autoPlay() : c.autoStop()));
+    function stopClip() {
+      video.pause(); dlg.classList.remove('is-playing');
+      if (video.readyState > 0 && video.currentTime !== 0) video.currentTime = 0;
     }
-    function animateTo(target) {
-      cancelAnimationFrame(anim);
-      const from = pos, t0 = performance.now(), dur = reduceMotion.matches ? 0 : 380;
-      const tick = now => {
-        const p = dur ? Math.min(1, (now - t0) / dur) : 1;
-        pos = from + (target - from) * (1 - Math.pow(1 - p, 3));                // ease-out
-        render();
-        if (p < 1) anim = requestAnimationFrame(tick); else { pos = target; render(); settle(); }
-      };
-      anim = requestAnimationFrame(tick);
-    }
-
-    let drag = null, dragged = false, vx = 0, last = null;
-    list.addEventListener('pointerdown', e => {
-      if (!phone.matches || e.button > 0) return;
-      cancelAnimationFrame(anim);
-      drag = { x: e.clientX, y: e.clientY, pos, id: e.pointerId, axis: null };
-      last = { x: e.clientX, t: e.timeStamp }; vx = 0; dragged = false;
-    });
-    list.addEventListener('pointermove', e => {
-      if (!drag || e.pointerId !== drag.id) return;
-      const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
-      if (!drag.axis) {
-        if (Math.abs(dx) > 8 && Math.abs(dx) > Math.abs(dy)) { drag.axis = 'x'; list.setPointerCapture(e.pointerId); list.classList.add('dragging'); }
-        else if (Math.abs(dy) > 8) { drag = null; animateTo(Math.round(pos)); return; } // vertical: the page scrolls
-        else return;
-      }
-      dragged = true;
-      const dt = e.timeStamp - last.t;
-      if (dt > 0) vx = (e.clientX - last.x) / dt;
-      last = { x: e.clientX, t: e.timeStamp };
-      pos = drag.pos - dx / pitch();
-      render();
-    });
-    const release = e => {
-      if (!drag || e.pointerId !== drag.id) return;
-      const d = drag; drag = null;
-      list.classList.remove('dragging');
-      const base = Math.round(d.pos);
-      if (d.axis !== 'x') { animateTo(base); return; }
-      const dx = e.clientX - d.x, w = pitch();
-      // one card per swipe: far enough or fast enough moves to the neighbour
-      const target = dx < -w * 0.15 || vx < -0.3 ? base + 1 : dx > w * 0.15 || vx > 0.3 ? base - 1 : base;
-      animateTo(target);
-    };
-    list.addEventListener('pointerup', release);
-    list.addEventListener('pointercancel', release);
-    // A swipe is not a tap: swallow the click that follows a drag, so it never flips a card.
-    list.addEventListener('click', e => { if (dragged) { e.preventDefault(); e.stopPropagation(); dragged = false; } }, true);
-    // Keyboard and screen-reader focus brings its card to the center.
-    list.addEventListener('focusin', e => {
-      if (!phone.matches) return;
-      const i = cards.indexOf(e.target.closest('.card'));
-      if (i >= 0) animateTo(Math.round(pos + wrap(i - pos)));
-    });
-    phone.addEventListener('change', () => {
-      if (phone.matches) { render(); settle(); return; }
-      cards.forEach(c => { c.style.removeProperty('--x'); c.autoStop(); });
-      active = -1;
-    });
-    return { render, start() { if (phone.matches) { render(); settle(); } } };
-  })();
-
-  function labelCard(card) {
-    const name = text(`team.${card.dataset.id}.name`).value;
-    $('.front .flip', card).setAttribute('aria-label', `${text('card.flip').value}: ${name}`);
-    $('.back .flip', card).setAttribute('aria-label', `${text('card.back').value}: ${name}`);
-  }
-
-  /* The video plays only while a mouse is over the card AND the photo side faces the viewer.
-     It is fetched on the first hover, never before, and never on touch screens. */
-  function setupCard(card) {
-    const video = $('video', card);
-    const front = $('.front', card), back = $('.back', card);
-    const frontBtn = $('.flip', front), backBtn = $('.flip', back);
-    let hovering = false;
-    let playedThisHover = false; // the clip runs once per hover, then rests on its last frame
-    let auto = false;            // phones: the carousel asks the centered card to play
-
-    // Photo side fully facing the viewer: not flipped and not in the middle of a turn.
-    const facesViewer = () => !card.classList.contains('flipped') && !card.classList.contains('flipping');
-    const shouldPlay = () => (hovering || auto) && facesViewer() && !reduceMotion.matches && !document.hidden;
-
-    // Seek only when not already at the start: Firefox stalls ("waiting" forever) on a
-    // redundant seek to 0 right before play(), so every hover after the first froze there.
-    function rewind() { if (video.readyState > 0 && video.currentTime !== 0) video.currentTime = 0; }
-    function play() {
-      if (playedThisHover || !shouldPlay()) return;
-      playedThisHover = true;
+    function playClip() {
+      if (reduceMotion.matches || document.hidden) return;
       if (!video.src) { video.src = video.dataset.src; video.preload = 'auto'; }
-      rewind();
-      const p = video.play();
-      if (p) p.catch(() => {}); // autoplay refusals and interrupted loads are harmless here
-    }
-    function stop() {
-      video.pause();
-      card.classList.remove('is-playing');
-      rewind();
+      const p = video.play(); if (p) p.catch(() => {});
     }
     // Shown only once real frames are coming, so the photo never blinks to an empty box.
-    video.addEventListener('playing', () => {
-      if (shouldPlay()) card.classList.add('is-playing'); else stop();
+    video.addEventListener('playing', () => { if (dlg.open) dlg.classList.add('is-playing'); else stopClip(); });
+    function open(row) {
+      clearTimeout(closing); dlg.classList.remove('closing');
+      current = row;
+      if (dlg.dataset.id !== row.dataset.id) fill(row.dataset.id);
+      if (!dlg.open) dlg.showModal();
+      document.documentElement.classList.add('modal-open');
+      sheet.scrollTop = 0;
+      $('.close', dlg).focus({ preventScroll: true });
+      playClip();
+    }
+    // A short fade out before the dialog leaves the top layer.
+    function close() {
+      if (!dlg.open || dlg.classList.contains('closing')) return;
+      const done = () => { dlg.classList.remove('closing'); dlg.close(); };
+      if (reduceMotion.matches) { done(); return; }
+      dlg.classList.add('closing');
+      closing = setTimeout(done, 200);
+    }
+    dlg.addEventListener('close', () => {
+      stopClip();
+      document.documentElement.classList.remove('modal-open');
+      if (current) current.focus({ preventScroll: true });
     });
-    card.stopVideo = stop;
-    // Phones have no hover: the carousel plays the clip once when this card arrives in the center.
-    card.autoPlay = () => { auto = true; playedThisHover = false; play(); };
-    card.autoStop = () => { auto = false; if (!video.hidden) stop(); };
-
-    // One continuous turn, run by CSS animations (see .to-back / .to-front in style.css).
-    let busy = false;
-    const turn = $('.turn', card);
-    async function setFlipped(on) {
-      if (busy) return; // a press during a turn is ignored rather than queued
-      busy = true;
-      const hadFocus = document.activeElement === (on ? frontBtn : backBtn);
-      stop(); // the video never runs during a turn, in either direction
-      if (on) video.hidden = true; // and is gone entirely on the text side
-      front.setAttribute('aria-hidden', String(on));
-      back.setAttribute('aria-hidden', String(!on));
-      card.classList.add('flipping');
-      card.classList.toggle('flipped', on);
-      if (!reduceMotion.matches) {
-        const cls = on ? 'to-back' : 'to-front';
-        card.classList.add(cls);
-        await new Promise(resolve => {
-          const done = e => { if (e && e.target !== turn) return; turn.removeEventListener('animationend', done); clearTimeout(t); resolve(); };
-          const t = setTimeout(done, 1000); // in case animationend never arrives
-          turn.addEventListener('animationend', done);
-        });
-        card.classList.remove(cls);
-      }
-      card.classList.remove('flipping');
-      if (!on) video.hidden = false; // the photo side is fully facing the viewer again
-      // Keyboard users keep their place: focus moves to the button on the side now showing.
-      if (hadFocus) (on ? backBtn : frontBtn).focus({ preventScroll: true });
-      busy = false;
-      // Turning back to the photo does not restart the clip: that would be a second play in one hover.
-    }
-
-    // Only the buttons flip the card, so the rest of it (names, emails) can be selected and copied.
-    frontBtn.addEventListener('click', () => setFlipped(true));
-    backBtn.addEventListener('click', () => setFlipped(false));
-    card.addEventListener('pointerenter', e => {
-      if (e.pointerType !== 'mouse') return;
-      hovering = true; playedThisHover = false;
-      if (facesViewer()) play(); // on the text side a hover does nothing to the video
-    });
-    card.addEventListener('pointerleave', e => {
-      if (e.pointerType !== 'mouse') return;
-      hovering = false;
-      if (!video.hidden) stop(); // no seeking a hidden video on the text side
-    });
-  }
-
-  /* Fit: measured with offsets, so the flip and the hover lift don't distort the numbers.
-     1. If any flip button (front or back) would touch its name, all of them move to their own line under the title.
-     2. A bio that runs into the email first loses some spacing, then shrinks in half-pixel steps. */
-  function fitCards() {
-    list.classList.remove('flip-low');
-    const cards = $$('.card');
-    const right = (box, el) => box.offsetLeft + el.offsetLeft + el.offsetWidth; // name end, in face coordinates
-    const clash = c => {
-      const fb = $('.front .flip', c), bb = $('.back .flip', c);
-      const textLeft = b => b.offsetLeft + parseFloat(getComputedStyle(b).paddingLeft);
-      return right($('.who', c), $('.who [data-k=name]', c)) > textLeft(fb) - 8 ||
-             right($('.bio', c), $('.bio [data-k=name]', c)) > textLeft(bb) - 8;
-    };
-    if (cards.some(clash)) list.classList.add('flip-low');
-    cards.forEach(card => {
-      const bio = $('.bio', card), mail = $('.mail', card);
-      card.classList.remove('tight');
-      bio.style.fontSize = '';
-      const overflows = () => bio.offsetTop + bio.offsetHeight > mail.offsetTop - 8;
-      if (!overflows()) return;
-      card.classList.add('tight');
-      let size = parseFloat(getComputedStyle(bio).fontSize);
-      while (overflows() && size > 8) { size -= 0.5; bio.style.fontSize = `${size}px`; }
-    });
-  }
-  /* ---------- tablets and desktops: the team as a list of names ---------- */
-  /* After k72.ca/en/about: pointing at a row (or focusing it) fills it with the accent and slides in
-     that person's card, the photo with the description under it; its clip plays once. Moving to
-     another row wipes the new card in over the old one; leaving the row slides the card out. */
-  const roster = (() => {
-    const box = $('#roster'), rows = $('.rows', box), looks = $('.looks', box), stack = $('.looks-in', box);
-    const rowTpl = $('#row-tpl'), lookTpl = $('#look-tpl');
-    const cards = {};
-    TEAM.forEach(id => {
-      const r = rowTpl.content.firstElementChild.cloneNode(true);
-      r.dataset.id = id;
-      r.setAttribute('aria-describedby', `look-${id}`);
-      const c = lookTpl.content.firstElementChild.cloneNode(true);
-      c.dataset.id = id;
-      $('figcaption', c).id = `look-${id}`;
-      [r, c].forEach(el => $$('[data-k]', el).forEach(k => {
-        if (k.dataset.k === 'email') k.textContent = `${id}@legalia.ee`;
-        else k.dataset.i18n = `team.${id}.${k.dataset.k}`;
-      }));
-      $('source', c).srcset = `${ASSETS}img/${id}.webp`;
-      $('img', c).src = `${ASSETS}img/${id}.png`;
-      const video = $('video', c);
-      video.dataset.src = `${ASSETS}video/${id}.mp4?v=2`;
-      video.addEventListener('playing', () => { if (c.classList.contains('cur') && looks.classList.contains('on')) c.classList.add('is-playing'); else stopClip(c); });
-      c.addEventListener('animationend', e => { if (e.target === c) $$('.look.was', stack).forEach(x => x.classList.remove('was')); });
-      rows.append(r); stack.append(c); cards[id] = c;
-    });
-    function stopClip(c) {
-      const v = $('video', c);
-      v.pause(); c.classList.remove('is-playing');
-      if (v.readyState > 0 && v.currentTime !== 0) v.currentTime = 0;
-    }
-    function playClip(c) {
-      const v = $('video', c);
-      if (reduceMotion.matches || document.hidden) return;
-      if (!v.src) { v.src = v.dataset.src; v.preload = 'auto'; }
-      const p = v.play(); if (p) p.catch(() => {});
-    }
-    // The cards sit in the middle of the screen, but never outside the black section. They all share
-    // one top edge, set by the tallest card, so switching person never moves the card.
-    function place() {
-      if (phone.matches || !looks.classList.contains('on')) return;
-      const r = box.getBoundingClientRect(), h = stack.offsetHeight;
-      const y = Math.min(Math.max(innerHeight / 2 - h / 2 - r.top, 24), r.height - h - 24);
-      looks.style.transform = `translate3d(0,${Math.round(y)}px,0)`;
-    }
-    let z = 1;
-    function show(id) {
-      const c = cards[id], prev = $('.look.cur', stack);
-      if (c !== prev) {
-        if (prev) { prev.classList.replace('cur', 'was'); stopClip(prev); }
-        // The wipe only when changing person on a card already showing; coming back from outside the
-        // list, the panel's own reveal is enough.
-        const wipe = looks.classList.contains('on');
-        if (!wipe) $$('.look.was', stack).forEach(x => x.classList.remove('was'));
-        c.classList.remove('wipe', 'was'); void c.offsetWidth;
-        c.classList.add('cur');
-        if (wipe) c.classList.add('wipe');
-        c.style.zIndex = ++z;
-      }
-      looks.classList.add('on');
-      place();
-      if (c !== prev || !c.classList.contains('is-playing')) playClip(c);
-    }
-    function hide() { looks.classList.remove('on'); $$('.look', stack).forEach(stopClip); }
-    rows.addEventListener('mouseover', e => { const r = e.target.closest('.row'); if (r) show(r.dataset.id); });
-    rows.addEventListener('mouseleave', () => { if (!rows.contains(document.activeElement)) hide(); });
-    rows.addEventListener('focusin', e => { const r = e.target.closest('.row'); if (r) show(r.dataset.id); });
-    rows.addEventListener('focusout', e => { if (!rows.contains(e.relatedTarget) && !rows.matches(':hover')) hide(); });
-    // A long description gets smaller in half-pixel steps, so the card always fits the screen.
-    function size() {
-      if (phone.matches) return;
-      const room = innerHeight - 96;
-      $$('.look', stack).forEach(c => {
-        const cap = $('figcaption', c);
-        cap.style.fontSize = '';
-        let px = parseFloat(getComputedStyle(cap).fontSize);
-        while (c.offsetHeight > room && px > 10) { px -= 0.5; cap.style.fontSize = `${px}px`; }
-      });
-      place();
-    }
-    return { size, place, stop: hide };
+    dlg.addEventListener('cancel', e => { e.preventDefault(); close(); }); // Esc
+    dlg.addEventListener('click', e => { if (e.target === dlg) close(); }); // a press outside the card
+    $('.close', dlg).addEventListener('click', close);
+    rows.addEventListener('click', e => { const r = e.target.closest('.row'); if (r) open(r); });
+    return { stop: stopClip };
   })();
   /* The characteristics stay at step 5 unless the longest line would run past the right edge of its
      columns (long Russian words, narrow screens); then they shrink just enough to fit. */
@@ -367,7 +123,7 @@
     const over = el.scrollWidth / el.clientWidth;
     if (over > 1) el.style.fontSize = `${parseFloat(getComputedStyle(el).fontSize) / over * 0.99}px`;
   }
-  const fitAll = () => { roster.size(); fitCards(); carousel.render(); fitTraits(); };
+  const fitAll = fitTraits;
 
   /* ---------- "Meist" text types itself out the first time it comes into view ---------- */
   /* Quick on purpose (about 1.2s for the whole paragraph). Screen readers get the full text
@@ -415,7 +171,7 @@
   addEventListener('resize', () => { cancelAnimationFrame(fitFrame); fitFrame = requestAnimationFrame(fitAll); });
   if (document.fonts) document.fonts.ready.then(fitAll);
 
-  const stopAll = () => { $$('.card').forEach(c => c.stopVideo()); roster.stop(); };
+  const stopAll = () => team.stop();
   document.addEventListener('visibilitychange', () => { if (document.hidden) stopAll(); });
   reduceMotion.addEventListener('change', () => { if (reduceMotion.matches) stopAll(); });
 
@@ -424,7 +180,6 @@
   big.removeAttribute('class');
   $('.lockup').append(big);
 
-  const team = $('#team');
 
   /* ---------- the year: turns from 1992 to this year with the scroll, while the experience page is held on screen ---------- */
   const FROM = 1992, TO = new Date().getFullYear();
@@ -498,10 +253,8 @@
     const cur = atBottom ? 'kontakt' : aboutTop < mid && aboutBottom > mid ? 'meist' : null;
     navLinks.forEach(a => (a.dataset.nav === cur ? a.setAttribute('aria-current', 'true') : a.removeAttribute('aria-current')));
     header.classList.toggle('at-hero', scrollY < innerHeight * 0.5);
-    if (team.getBoundingClientRect().bottom < innerHeight * 0.25) stopAll();
     if (aboutTop < mid) typer.start();
     yearFromScroll();
-    roster.place();
   }
   addEventListener('scroll', () => { if (!ticking) { ticking = true; requestAnimationFrame(onScroll); } }, { passive: true });
   addEventListener('resize', onScroll);
@@ -535,7 +288,7 @@
     }
 
     addEventListener('wheel', e => {
-      if (reduceMotion.matches || e.ctrlKey || e.shiftKey || e.defaultPrevented) return; // pinch-zoom, sideways
+      if (root.classList.contains('modal-open') || reduceMotion.matches || e.ctrlKey || e.shiftKey || e.defaultPrevented) return; // pinch-zoom, sideways
       if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) return; // sideways swipes stay native (card row)
       e.preventDefault();
       const unit = e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? innerHeight : 1;
@@ -563,7 +316,6 @@
   applyLanguage(saved || 'et');
 
   $('#year').textContent = new Date().getFullYear();
-  carousel.start(); // phones: centre the first card and play its clip
   onScroll();
 
   // Report what is still missing, for whoever pastes the official texts in.
