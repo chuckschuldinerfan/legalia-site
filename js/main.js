@@ -4,7 +4,6 @@
   'use strict';
 
   const I18N = window.LEGALIA_I18N;
-  const ASSETS = 'assets/';
   const LANGS = ['et', 'en', 'ru'];
   const TEAM = ['aivar', 'dragan', 'henrik', 'gert', 'piret']; // card order, left to right
   const $ = (sel, root = document) => root.querySelector(sel);
@@ -40,90 +39,115 @@
     document.title = text('meta.title').value;
     $$('[data-i18n]').forEach(el => put(el, el.dataset.i18n));
     $$('[data-i18n-label]').forEach(el => el.setAttribute('aria-label', text(el.dataset.i18nLabel).value));
+    renderTraits();
+    labelTeam();
     typer.prepare();
     fitAll();
     $$('[data-lang]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.lang === lang)));
     try { localStorage.setItem('legalia-lang', lang); } catch (e) { /* storage blocked: the choice just isn't remembered */ }
   }
 
-  /* ---------- the team: a list of names; pressing one opens that person's card ---------- */
-  /* The rows are buttons (after the k72.ca/en/about list: pointing at one fills it with the accent).
-     Pressing a row opens the card in a modal dialog over the blurred page: the photo (its clip plays
-     once) with the name and the description under it. Esc, the close button or a press outside closes
-     it, and focus goes back to the row. */
-  const team = (() => {
-    const rows = $('#roster .rows'), rowTpl = $('#row-tpl');
-    const dlg = $('#person'), sheet = $('.sheet', dlg), video = $('video', dlg);
-    let current = null, closing = 0;
-    TEAM.forEach(id => {
-      const li = rowTpl.content.firstElementChild.cloneNode(true);
-      const row = $('.row', li);
-      row.dataset.id = id;
-      $$('[data-k]', li).forEach(k => (k.dataset.i18n = `team.${id}.${k.dataset.k}`));
-      rows.append(li);
+  /* ---------- the team: a list of names; pressing one opens its details under it ---------- */
+  /* After the k72.ca/en/about list: pointing at a row fills it with the accent and the name decodes
+     into "Kontakt", letter by letter out of random characters (and back when the pointer leaves).
+     Pressing the row opens it downwards with the person's details; one row is open at a time. */
+  const rows = $('#roster .rows');
+  TEAM.forEach(id => {
+    const li = $('#row-tpl').content.firstElementChild.cloneNode(true);
+    li.dataset.id = id;
+    $$('[data-k]', li).forEach(k => {
+      if (k.dataset.k === 'email') { k.textContent = `${id}@legalia.ee`; k.href = `mailto:${id}@legalia.ee`; }
+      else k.dataset.i18n = `team.${id}.${k.dataset.k}`;
     });
-    // The card's fields point at the open person's texts, so a language change re-fills them too.
-    function fill(id) {
-      $$('[data-k]', dlg).forEach(k => {
-        if (k.dataset.k === 'email') { k.textContent = `${id}@legalia.ee`; k.href = `mailto:${id}@legalia.ee`; }
-        else { k.dataset.i18n = `team.${id}.${k.dataset.k}`; put(k, k.dataset.i18n); }
-      });
-      dlg.dataset.id = id;
-      $('source', dlg).srcset = `${ASSETS}img/${id}.webp`;
-      $('img', dlg).src = `${ASSETS}img/${id}.png`;
-      stopClip();
-      video.removeAttribute('src'); video.load();
-      video.dataset.src = `${ASSETS}video/${id}.mp4?v=2`;
-    }
-    function stopClip() {
-      video.pause(); dlg.classList.remove('is-playing');
-      if (video.readyState > 0 && video.currentTime !== 0) video.currentTime = 0;
-    }
-    function playClip() {
-      if (reduceMotion.matches || document.hidden) return;
-      if (!video.src) { video.src = video.dataset.src; video.preload = 'auto'; }
-      const p = video.play(); if (p) p.catch(() => {});
-    }
-    // Shown only once real frames are coming, so the photo never blinks to an empty box.
-    video.addEventListener('playing', () => { if (dlg.open) dlg.classList.add('is-playing'); else stopClip(); });
-    function open(row) {
-      clearTimeout(closing); dlg.classList.remove('closing');
-      current = row;
-      if (dlg.dataset.id !== row.dataset.id) fill(row.dataset.id);
-      if (!dlg.open) dlg.showModal();
-      document.documentElement.classList.add('modal-open');
-      sheet.scrollTop = 0;
-      $('.close', dlg).focus({ preventScroll: true });
-      playClip();
-    }
-    // A short fade out before the dialog leaves the top layer.
-    function close() {
-      if (!dlg.open || dlg.classList.contains('closing')) return;
-      const done = () => { dlg.classList.remove('closing'); dlg.close(); };
-      if (reduceMotion.matches) { done(); return; }
-      dlg.classList.add('closing');
-      closing = setTimeout(done, 200);
-    }
-    dlg.addEventListener('close', () => {
-      stopClip();
-      document.documentElement.classList.remove('modal-open');
-      if (current) current.focus({ preventScroll: true });
-    });
-    dlg.addEventListener('cancel', e => { e.preventDefault(); close(); }); // Esc
-    dlg.addEventListener('click', e => { if (e.target === dlg) close(); }); // a press outside the card
-    $('.close', dlg).addEventListener('click', close);
-    rows.addEventListener('click', e => { const r = e.target.closest('.row'); if (r) open(r); });
-    return { stop: stopClip };
-  })();
-  /* The characteristics stay at step 5 unless the longest line would run past the right edge of its
+    $('.more', li).id = `more-${id}`;
+    $('.row', li).setAttribute('aria-controls', `more-${id}`);
+    rows.append(li);
+  });
+
+  // The decode: every letter flickers through random characters and settles on its own, a little
+  // later than the one before it; the word grows or shrinks to the new length on the way.
+  const GLYPHS = { et: 'ABDEFGHIJKLMNOPRSTUVÕÄÖÜ#%&/+', en: 'ABCDEFGHIJKLMNOPRSTUVWXYZ#%&/+', ru: 'АБВГДЕЖЗИКЛМНОПРСТУФХЦЧШЭЮЯ#%&/+' };
+  function scramble(el, to) {
+    cancelAnimationFrame(el.scrambling);
+    const from = el.textContent;
+    if (from === to) return;
+    if (reduceMotion.matches || !from) { el.textContent = to; return; }
+    const settle = [...to].map((_, i) => 120 + i * 32 + Math.random() * 90); // ms after the start
+    const end = Math.max(...settle), t0 = performance.now();
+    const glyphs = GLYPHS[lang];
+    let last = 0;
+    const step = now => {
+      const t = now - t0;
+      if (now - last > 45 || t >= end) { // a new random letter about 20 times a second: calm, not frantic
+        last = now;
+        const len = Math.round(from.length + (to.length - from.length) * Math.min(1, t / end));
+        let out = '';
+        for (let i = 0; i < len; i++) out += i < to.length && t >= settle[i] ? to[i] : glyphs[Math.random() * glyphs.length | 0];
+        el.textContent = out;
+      }
+      if (t < end) el.scrambling = requestAnimationFrame(step); else el.textContent = to;
+    };
+    el.scrambling = requestAnimationFrame(step);
+  }
+  const hoverable = matchMedia('(hover: hover)');
+  const nameOf = li => text(`team.${li.dataset.id}.name`).value;
+  // "Kontakt" while the pointer is on the row (or the keyboard is on it), the name otherwise.
+  const shown = li => (hoverable.matches && li.matches(':hover')) || $('.row', li).matches(':focus-visible');
+  const wordFor = li => (shown(li) ? text('nav.contact').value : nameOf(li));
+  const label = li => scramble($('.scr', li), wordFor(li));
+  rows.addEventListener('pointerover', e => { const li = e.target.closest('.member'); if (li && e.pointerType === 'mouse') label(li); });
+  rows.addEventListener('pointerout', e => { const li = e.target.closest('.member'); if (li && !li.contains(e.relatedTarget)) requestAnimationFrame(() => label(li)); });
+  rows.addEventListener('focusin', e => { const li = e.target.closest('.member'); if (li) label(li); });
+  rows.addEventListener('focusout', e => { const li = e.target.closest('.member'); if (li) requestAnimationFrame(() => label(li)); });
+  // After a language change: the words in the new language at once, without the animation.
+  const labelTeam = () => $$('.member', rows).forEach(li => { const el = $('.scr', li); cancelAnimationFrame(el.scrambling); el.textContent = wordFor(li); });
+
+  function setOpen(li, on) {
+    li.classList.toggle('open', on);
+    $('.row', li).setAttribute('aria-expanded', String(on));
+    $('.more', li).inert = !on;
+  }
+  rows.addEventListener('click', e => {
+    const row = e.target.closest('.row');
+    if (!row) return;
+    const li = row.parentElement, on = !li.classList.contains('open');
+    $$('.member.open', rows).forEach(m => m !== li && setOpen(m, false));
+    setOpen(li, on);
+  });
+
+  /* ---------- characteristics: one line per word, sliding up into view ---------- */
+  const traits = $('.traits-list');
+  function renderTraits() {
+    const t = text('traits.items');
+    traits.replaceChildren(...t.value.map(w => {
+      const ln = document.createElement('span'), inner = document.createElement('span');
+      ln.className = 'ln'; inner.textContent = w;
+      ln.append(inner);
+      return ln;
+    }));
+    if (t.lang !== lang) traits.lang = t.lang; else traits.removeAttribute('lang');
+  }
+  /* The words stay at their step unless the longest line would run past the right edge of their
      columns (long Russian words, narrow screens); then they shrink just enough to fit. */
   function fitTraits() {
-    const el = $('.traits-list');
-    el.style.fontSize = '';
-    const over = el.scrollWidth / el.clientWidth;
-    if (over > 1) el.style.fontSize = `${parseFloat(getComputedStyle(el).fontSize) / over * 0.99}px`;
+    traits.style.fontSize = '';
+    const widest = Math.max(...$$('.ln > span', traits).map(x => x.offsetWidth));
+    const over = widest / traits.clientWidth;
+    if (over > 1) traits.style.fontSize = `${parseFloat(getComputedStyle(traits).fontSize) / over * 0.99}px`;
   }
   const fitAll = fitTraits;
+  // The first time the page is well in view, the words slide up from below one after the other,
+  // then the texts on the right.
+  const traitsSection = $('#omadused');
+  if ('IntersectionObserver' in window && !reduceMotion.matches) {
+    traitsSection.classList.add('hold');
+    const io = new IntersectionObserver(es => {
+      if (!es.some(e => e.isIntersecting)) return;
+      io.disconnect();
+      traitsSection.classList.replace('hold', 'shown');
+    }, { threshold: 0.35 });
+    io.observe(traitsSection);
+  }
 
   /* ---------- "Meist" text types itself out the first time it comes into view ---------- */
   /* Quick on purpose (about 1.2s for the whole paragraph). Screen readers get the full text
@@ -171,9 +195,6 @@
   addEventListener('resize', () => { cancelAnimationFrame(fitFrame); fitFrame = requestAnimationFrame(fitAll); });
   if (document.fonts) document.fonts.ready.then(fitAll);
 
-  const stopAll = () => team.stop();
-  document.addEventListener('visibilitychange', () => { if (document.hidden) stopAll(); });
-  reduceMotion.addEventListener('change', () => { if (reduceMotion.matches) stopAll(); });
 
   /* ---------- the logo in the middle of the first screen: a copy of the header logo ---------- */
   const big = $('header .logo').cloneNode(true);
@@ -288,7 +309,7 @@
     }
 
     addEventListener('wheel', e => {
-      if (root.classList.contains('modal-open') || reduceMotion.matches || e.ctrlKey || e.shiftKey || e.defaultPrevented) return; // pinch-zoom, sideways
+      if (reduceMotion.matches || e.ctrlKey || e.shiftKey || e.defaultPrevented) return; // pinch-zoom, sideways
       if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) return; // sideways swipes stay native (card row)
       e.preventDefault();
       const unit = e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? innerHeight : 1;

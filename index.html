@@ -6,10 +6,10 @@
 <title>Legalia Advokaadibüroo</title>
 <meta name="theme-color" content="#f9f9f9">
 <link rel="icon" href="assets/logo.svg" type="image/svg+xml">
-<link rel="stylesheet" href="css/style.css?v=v2-37">
-<script src="js/i18n.js?v=v2-37" defer></script>
-<script src="js/main.js?v=v2-37" defer></script>
-<script src="js/intro.js?v=v2-37" defer></script>
+<link rel="stylesheet" href="css/style.css?v=v2-38">
+<script src="js/i18n.js?v=v2-38" defer></script>
+<script src="js/main.js?v=v2-38" defer></script>
+<script src="js/intro.js?v=v2-38" defer></script>
 </head>
 <body>
 <!-- All texts live in js/i18n.js. Elements here only carry their key (data-i18n for text, data-i18n-label for aria-label). -->
@@ -31,26 +31,30 @@
   <!-- First screen: the logo in the middle (main.js copies the header logo in here). -->
   <section class="hero"><div class="lockup"></div></section>
 
-  <!-- About: one sentence, medium size, in the middle of a black screen (it types itself in). -->
+  <!-- About: one sentence in the middle of a black screen, its label right on top (it types itself in). -->
   <section class="ink meist" id="meist" aria-labelledby="meist-h">
-    <h2 class="sr-only" id="meist-h" data-i18n="about.label"></h2>
-    <p class="about" data-i18n="about.text"></p>
+    <div class="meist-in">
+      <h2 class="kicker" id="meist-h" data-i18n="about.label"></h2>
+      <p class="about" data-i18n="about.text"></p>
+    </div>
   </section>
 
   <!-- Experience: a light page held on screen while the year turns from 1992 to this one, then released. -->
   <section class="years" id="kogemus" aria-labelledby="kogemus-h">
     <div class="pin">
+      <h2 class="kicker" data-i18n="experience.label"></h2>
       <p class="year" aria-hidden="true"></p>
       <div class="grid"><p class="lede" id="kogemus-h" data-i18n="experience.text"></p></div>
     </div>
   </section>
 
-  <!-- The team: a list of names, after k72.ca/en/about. Pointing at a row fills it with the accent;
-       pressing it opens that person's card over the blurred page (main.js builds the rows from #row-tpl). -->
+  <!-- The team: a list of names, after k72.ca/en/about. Pointing at a row fills it with the accent and
+       decodes the name into "Kontakt"; pressing it opens the row downwards with that person's details
+       (main.js builds the rows from #row-tpl). -->
   <section class="team" id="team" data-i18n-label="hero.label">
     <div class="roster" id="roster">
       <div class="grid roster-top">
-        <h2 class="roster-h" id="files-h" data-i18n="files.title"></h2>
+        <h2 class="kicker" id="files-h" data-i18n="files.title"></h2>
         <p class="roster-p" data-i18n="files.text"></p>
       </div>
       <ul class="rows" role="list"></ul>
@@ -60,11 +64,11 @@
   <!-- Characteristics: the four words large on the left, two short texts small by the right margin. -->
   <section class="traits" id="omadused" aria-labelledby="traits-h">
     <div class="grid">
-      <h2 class="traits-h" id="traits-h" data-i18n="traits.title"></h2>
-      <p class="traits-list" data-i18n="traits.items"></p>
+      <h2 class="kicker traits-h" id="traits-h" data-i18n="traits.title"></h2>
+      <p class="traits-list"></p><!-- main.js writes one line per word, so each can slide up on its own -->
       <div class="traits-side">
-        <p data-i18n="traits.text"></p>
-        <p data-i18n="traits.langs"></p>
+        <p class="up"><span data-i18n="traits.text"></span></p>
+        <p class="up"><span data-i18n="traits.langs"></span></p>
       </div>
     </div>
   </section>
@@ -92,27 +96,19 @@
   </div>
 </footer>
 
-<!-- One person's card: opened over the blurred page; main.js fills it for whoever was pressed. -->
-<dialog class="person" id="person" aria-labelledby="person-name">
-  <article class="sheet">
-    <div class="pic"><picture><source type="image/webp"><img alt="" width="700" height="800" decoding="async"></picture>
-      <video muted playsinline disablepictureinpicture preload="none" aria-hidden="true" tabindex="-1"></video></div>
-    <div class="info">
-      <div class="top">
-        <h2 id="person-name"><span data-k="name"></span><br><span class="g" data-k="title"></span></h2>
-        <button class="close" type="button" data-i18n="card.close"></button>
-      </div>
-      <p class="lead" data-k="spec"></p>
-      <p class="g" data-k="cred"></p>
-      <p class="g" data-k="lang"></p>
-      <a class="email" data-k="email"></a>
-    </div>
-  </article>
-</dialog>
-
-<!-- One row of the team list; main.js fills the data-k fields. -->
+<!-- One person in the team list: the row is a button that opens the details under it; main.js fills the data-k fields. -->
 <template id="row-tpl">
-  <li><button class="row" type="button" aria-haspopup="dialog"><span class="role" data-k="title"></span><span class="nm" data-k="name"></span></button></li>
+  <li class="member">
+    <button class="row" type="button" aria-expanded="false">
+      <span class="role" data-k="title"></span>
+      <span class="nm"><span class="sr-only" data-k="name"></span><span class="scr" aria-hidden="true"></span></span>
+    </button>
+    <div class="more" inert><div class="more-in"><div class="grid">
+      <p class="spec" data-k="spec"></p>
+      <div class="facts"><p data-k="cred"></p><p data-k="lang"></p></div>
+      <a class="mail" data-k="email"></a>
+    </div></div></div>
+  </li>
 </template>
 </body>
 </html>
