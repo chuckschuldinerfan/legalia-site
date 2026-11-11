@@ -16,8 +16,8 @@
   --gut-r:max(24px, env(safe-area-inset-right, 0px));
   --gap:12px;
   --foot:calc(var(--gut) * 1.618);                    /* bottom margin: 39px, 26px on phones */
-  --head-bar:26px;                                    /* the header's height: the logo (the stacked menu on phones) */
-  --head:calc(var(--gut) + var(--head-bar) + var(--foot)); /* top of a page to its label: 89px, 78px on phones */
+  --head-bar:39px;                                    /* the header's height: the logo (the menu's three lines on phones) */
+  --head:calc(var(--gut) + var(--head-bar) + var(--foot)); /* top of a page to its label: 102px, 90px on phones */
 
   /* Type scale. One fluid modular scale: at a 360px screen it is 13px x 1.25 per step, at 1920px
      it is 16px x 1.5 per step, and in between every step grows in a straight line with the width.
@@ -57,8 +57,8 @@ header.on-accent{mix-blend-mode:normal}
 header.on-accent .menu a,header.on-accent .menu button{color:var(--on-accent-mute)}
 header.on-accent .menu a:hover,header.on-accent .menu button:hover,header.on-accent .menu a[aria-current="true"],header.on-accent .menu button[aria-pressed="true"]{color:#fff}
 .home{display:block;width:max-content}
-.logo{height:26px;width:auto;display:block;color:#fff}
-.menu{grid-column:5;display:flex;justify-content:space-between;gap:18px}
+.logo{height:39px;width:auto;display:block;color:#fff}
+.menu{grid-column:4 / span 2;display:flex;justify-content:space-between;gap:18px}
 .menu div{display:flex;gap:14px}
 .menu a,.menu button{all:unset;cursor:pointer;color:#9a9a9a;transition:color .2s;-webkit-tap-highlight-color:transparent}
 .menu a:hover,.menu button:hover{color:#d4d4d4}
@@ -137,7 +137,7 @@ header.at-hero .home{opacity:0;pointer-events:none}
 .years .lede{grid-column:1 / -1;margin:0;font-size:var(--step-2);line-height:1.12;letter-spacing:-.02em;text-wrap:pretty}
 /* The year: four columns of digits 0-9 that roll like an odometer.
    Each column is a window as tall as the digits' ink (--yh), so nothing shows above or below the digits. */
-.year{display:flex;padding-left:var(--gut);margin:0;font-size:calc((100vw - 2 * var(--gut)) / 2.2);font-weight:400;line-height:1;font-variant-numeric:tabular-nums}
+.year{display:flex;padding-left:var(--gut);margin:0;font-size:calc((100vw - 2 * var(--gut)) / 2.2);font-weight:400;line-height:1;font-variant-numeric:tabular-nums;color:var(--accent)}
 .year .d{display:block;height:calc(var(--yh, 1) * 1em);overflow:hidden}
 .year .s{display:block;margin-top:calc(var(--yt, 0) * -1em);will-change:transform}
 .year .s span{display:block;height:1em}
@@ -167,10 +167,6 @@ main{position:relative;z-index:1}
 .foot p{grid-column:1 / -1;display:flex;align-items:center;gap:.25em}
 .foot .copy{width:1.05em;height:1.05em;flex:none}
 
-/* tablet: the menu needs a little more than one column's width, so it takes the last two */
-@media (max-width:1279px) and (min-width:761px){
-  .menu{grid-column:4 / span 2}
-}
 
 /* ---------- the team: a list of names ---------- */
 /* After the team list on k72.ca/en/about, at its sizes (measured at 1440px wide: rows 74px with a
@@ -198,24 +194,26 @@ main{position:relative;z-index:1}
   .member:hover .role{color:var(--on-accent-mute)}
 }
 /* The details open downwards (a grid row growing from 0 to its content's height). They sit on the
-   page grid: the specialisations large on the left, credentials and languages in the middle, the
-   email on the right margin under the name. The two texts start on one line (their first baselines
-   meet); the email sits on the bottom margin. */
+   page grid: the person's video portrait in the first column, the specialisations large beside it,
+   credentials and languages in the fourth, the email on the right margin under the name. The two
+   texts start on one line (their first baselines meet), the portrait's top on their cap height (Helvetica Neue: .281em below the line top at line-height 1.25);
+   the email sits on the bottom margin. */
 .more{display:grid;grid-template-rows:0fr;transition:grid-template-rows .5s cubic-bezier(.215,.61,.355,1)}
 .member.open .more{grid-template-rows:1fr}
 .more-in{min-height:0;overflow:hidden}
 .more .grid{row-gap:var(--gut);align-items:first baseline;padding-top:var(--gap);padding-bottom:var(--foot);opacity:0;transition:opacity .25s ease}
 .member.open .more .grid{opacity:1;transition:opacity .4s ease .12s}
-.spec{grid-column:1 / span 2;font-size:var(--step-1);line-height:1.25;letter-spacing:-.01em;text-wrap:pretty}
-.facts{grid-column:3 / span 2;display:flex;flex-direction:column;gap:.6em;color:var(--on-accent-mute)}
+.portrait{grid-column:1;align-self:start;margin-top:calc(var(--step-1) * .281);display:block;width:100%;height:auto;aspect-ratio:7 / 8;object-fit:cover;background:var(--ink)}
+.spec{grid-column:2 / span 2;font-size:var(--step-1);line-height:1.25;letter-spacing:-.01em;text-wrap:pretty}
+.facts{grid-column:4;display:flex;flex-direction:column;gap:.6em;color:var(--on-accent-mute)}
 .mail{grid-column:5;justify-self:end;align-self:end;font-size:var(--step-1);line-height:1.25;letter-spacing:-.01em;transition:color .2s}
 .mail:hover{color:#fff}
 .mail:focus-visible{outline:1px solid var(--on-ink);outline-offset:4px}
 .member ::selection{background:var(--on-ink);color:var(--accent)}
 @media (max-width:1279px) and (min-width:761px){
-  .spec{grid-column:1 / span 3}
+  .spec{grid-column:2 / span 2}
   .facts{grid-column:4 / span 2}
-  .mail{grid-column:4 / span 2;justify-self:start}
+  .mail{grid-column:4 / span 2;grid-row:2;justify-self:start}
 }
 
 /* ---------- the blur under the top bar ---------- */
@@ -231,17 +229,20 @@ main{position:relative;z-index:1}
 .intro ~ .veil{opacity:0}
 .intro.landed ~ .veil{opacity:1;transition:opacity .8s ease}
 
-/* ---------- phones: narrower margins, the menu stacks under itself on the right ---------- */
+/* ---------- phones: narrower margins, the menu in two columns on the right ---------- */
 @media (max-width:760px){
   :root{--gut:max(16px, env(safe-area-inset-left, 0px));--gut-r:max(16px, env(safe-area-inset-right, 0px));--hero-min:560px}
   header.grid{grid-template-columns:1fr auto}
-  .menu{grid-column:2;flex-direction:column;align-items:flex-end;gap:4px}
-  .logo{height:22px}
+  /* Three links and three languages beside the big logo: two columns of three lines each. */
+  .menu{grid-column:2;gap:14px}
+  .menu div{flex-direction:column;align-items:flex-end;gap:0}
+  .logo{height:33px}
   .reach,.place{grid-column:1 / -1;justify-self:start}
-  :root{--head-bar:36px}
+  :root{--head-bar:48px}
   /* The role above the name, both on the left: the names are too long for one line beside it. */
   .row{flex-direction:column;align-items:flex-start;gap:4px;padding-block:14px 12px}
   .row .nm{padding-block:0;white-space:normal}
+  .portrait{grid-column:1 / span 3;margin-top:0}
   .spec,.facts,.mail{grid-column:1 / -1;justify-self:start}
 }
 @media (prefers-reduced-motion:reduce){

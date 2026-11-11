@@ -57,6 +57,7 @@
     li.dataset.id = id;
     $$('[data-k]', li).forEach(k => {
       if (k.dataset.k === 'email') { k.textContent = `${id}@legalia.ee`; k.href = `mailto:${id}@legalia.ee`; }
+      else if (k.dataset.k === 'video') { k.dataset.src = `assets/video/${id}.mp4`; k.poster = `assets/img/${id}.webp`; }
       else k.dataset.i18n = `team.${id}.${k.dataset.k}`;
     });
     $('.more', li).id = `more-${id}`;
@@ -102,10 +103,16 @@
   // After a language change: the words in the new language at once, without the animation.
   const labelTeam = () => $$('.member', rows).forEach(li => { const el = $('.scr', li); cancelAnimationFrame(el.scrambling); el.textContent = wordFor(li); });
 
+  // The portrait loads the first time its row opens, plays while it is open and stops when it closes.
   function setOpen(li, on) {
     li.classList.toggle('open', on);
     $('.row', li).setAttribute('aria-expanded', String(on));
     $('.more', li).inert = !on;
+    const v = $('.portrait', li);
+    if (on) {
+      if (!v.getAttribute('src')) v.src = v.dataset.src;
+      if (!reduceMotion.matches) v.play().catch(() => { /* autoplay refused: the poster stays */ });
+    } else v.pause();
   }
   rows.addEventListener('click', e => {
     const row = e.target.closest('.row');
@@ -260,8 +267,9 @@
   }
   yearFromScroll();
 
-  /* ---------- menu: highlight what is in view; stop card videos once the team is off screen ---------- */
+  /* ---------- menu: highlight what is in view ---------- */
   const about = $('#meist');
+  const team = $('#team');
   const header = $('header');
   const navLinks = $$('[data-nav]');
   let ticking = false;
@@ -270,7 +278,8 @@
     const mid = innerHeight * 0.5;
     const { top: aboutTop, bottom: aboutBottom } = about.getBoundingClientRect();
     const atBottom = scrollY + innerHeight >= document.documentElement.scrollHeight - 2;
-    const cur = atBottom ? 'kontakt' : aboutTop < mid && aboutBottom > mid ? 'meist' : null;
+    const inView = el => { const r = el.getBoundingClientRect(); return r.top < mid && r.bottom > mid; };
+    const cur = atBottom ? 'kontakt' : aboutTop < mid && aboutBottom > mid ? 'meist' : inView(team) ? 'team' : null;
     navLinks.forEach(a => (a.dataset.nav === cur ? a.setAttribute('aria-current', 'true') : a.removeAttribute('aria-current')));
     header.classList.toggle('at-hero', scrollY < innerHeight * 0.5);
     if (aboutTop < mid) typer.start();
@@ -280,8 +289,8 @@
   addEventListener('resize', onScroll);
   onScroll();
 
-  /* Menu links: "Meist" scrolls to the about section, "Kontakt" to the very bottom, where the bar is. */
-  const target = { meist: () => about.getBoundingClientRect().top + scrollY, kontakt: () => document.documentElement.scrollHeight };
+  /* Menu links: "Meist" scrolls to the about section, "Meeskond" to the team, "Kontakt" to the very bottom, where the bar is. */
+  const target = { meist: () => about.getBoundingClientRect().top + scrollY, team: () => team.getBoundingClientRect().top + scrollY, kontakt: () => document.documentElement.scrollHeight };
   navLinks.forEach(a => a.addEventListener('click', e => {
     e.preventDefault();
     scrollTo({ top: target[a.dataset.nav](), behavior: reduceMotion.matches ? 'auto' : 'smooth' });

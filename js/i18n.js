@@ -7,7 +7,7 @@ window.LEGALIA_I18N = {
   et: {
     meta: { title: 'Legalia Advokaadibüroo' },
     header: { home: 'Legalia, avaleht', menu: 'Menüü', language: 'Keel' },
-    nav: { about: 'Meist', contact: 'Kontakt' },
+    nav: { about: 'Meist', team: 'Meeskond', contact: 'Kontakt' },
     hero: { label: 'Meeskond' },
     files: { title: 'Meie meeskond', text: 'Viis inimest, kes seisavad Teie huvide eest, igaüks oma valdkonna asjatundja. Koos katame nii era- kui ka avaliku õiguse ning nõustame kliente seitsmes keeles.' }, // EN from the user; ET translation to check
     about: {
@@ -66,7 +66,7 @@ window.LEGALIA_I18N = {
   en: {
     meta: { title: 'Legalia Law Office' },
     header: { home: 'Legalia, home page', menu: 'Menu', language: 'Language' },          // own translation
-    nav: { about: 'About', contact: 'Contact' },
+    nav: { about: 'About', team: 'Team', contact: 'Contact' },
     hero: { label: 'Team' },                                                              // own translation
     files: { title: 'Our team', text: 'Five people who stand up for your interests, each with their own field of expertise. Together we cover private and public law, and advise clients in seven languages.' }, // user's text (7 = the team's languages combined)
     about: {
@@ -118,7 +118,7 @@ window.LEGALIA_I18N = {
   ru: {
     meta: { title: 'Адвокатское бюро Legalia' },
     header: { home: 'Legalia, главная страница', menu: 'Меню', language: 'Язык' },       // own translation
-    nav: { about: 'О нас', contact: 'Контакты' },
+    nav: { about: 'О нас', team: 'Команда', contact: 'Контакты' },
     hero: { label: 'Команда' },                                                           // own translation
     files: { title: 'Наша команда', text: 'Пять человек, которые защищают Ваши интересы, каждый — специалист в своей области. Вместе мы охватываем частное и публичное право и консультируем клиентов на семи языках.' }, // own text
     about: {
