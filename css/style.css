@@ -50,7 +50,10 @@ a{color:inherit;text-decoration:none}
 .small{font-size:var(--step--1);letter-spacing:.03em;text-transform:uppercase;line-height:1.45}
 
 /* ---------- header: one layer that inverts against whatever passes under it ---------- */
-header{position:fixed;inset:0 0 auto;z-index:50;padding-top:calc(var(--gut) + env(safe-area-inset-top, 0px));color:#fff;mix-blend-mode:difference;align-items:center;pointer-events:none}
+header,.mono{position:fixed;inset:0 0 auto;z-index:50;padding-top:calc(var(--gut) + env(safe-area-inset-top, 0px));color:#fff;mix-blend-mode:difference;align-items:center;pointer-events:none}
+/* Its gray copy (main.js) on top: blending by saturation, it leaves only the brightness of what is under it. */
+.mono{z-index:51;mix-blend-mode:saturation}
+.mono,.mono *{color:#808080 !important;pointer-events:none !important}
 header > *{pointer-events:auto}
 /* Over the burgundy contact page an inverted header would turn mint green, so there it is plain white. */
 header.on-accent{mix-blend-mode:normal}
@@ -58,7 +61,7 @@ header.on-accent .menu a,header.on-accent .menu button{color:var(--on-accent-mut
 header.on-accent .menu a:hover,header.on-accent .menu button:hover,header.on-accent .menu a[aria-current="true"],header.on-accent .menu button[aria-pressed="true"]{color:#fff}
 .home{display:block;width:max-content}
 .logo{height:39px;width:auto;display:block;color:#fff}
-.menu{grid-column:4 / span 2;display:flex;justify-content:space-between;gap:18px}
+.menu{grid-column:4 / span 2;display:flex;justify-content:flex-end;gap:var(--gut)}
 .menu div{display:flex;gap:14px}
 .menu a,.menu button{all:unset;cursor:pointer;color:#9a9a9a;transition:color .2s;-webkit-tap-highlight-color:transparent}
 .menu a:hover,.menu button:hover{color:#d4d4d4}
@@ -188,33 +191,32 @@ main{position:relative;z-index:1}
 .row{all:unset;box-sizing:border-box;display:flex;width:100%;justify-content:space-between;align-items:center;gap:var(--gut);padding:10px var(--gut-r) 10px var(--gut);cursor:pointer;-webkit-tap-highlight-color:transparent}
 .role{align-self:flex-start;color:var(--on-ink-mute);transition:color .3s cubic-bezier(.215,.61,.355,1)}
 .member.open .role,.row:focus-visible .role{color:var(--on-accent-mute)}
-.row .nm{padding-block:10px;margin-bottom:-.2em;font-size:clamp(28px, 2.78vw, 48px);line-height:1;text-transform:uppercase;white-space:nowrap}
+.row .nm{padding-block:10px;margin-bottom:-.2em;font-size:var(--nm);line-height:1;text-transform:uppercase;white-space:nowrap}
 @media (hover:hover){
   .member:hover::before{transform:none}
   .member:hover .role{color:var(--on-accent-mute)}
 }
 /* The details open downwards (a grid row growing from 0 to its content's height). They sit on the
-   page grid: the person's video portrait in the first column, the specialisations large beside it,
-   credentials and languages in the fourth, the email on the right margin under the name. The two
-   texts start on one line (their first baselines meet), the portrait's top on their cap height (Helvetica Neue: .281em below the line top at line-height 1.25);
-   the email sits on the bottom margin. */
-.more{display:grid;grid-template-rows:0fr;transition:grid-template-rows .5s cubic-bezier(.215,.61,.355,1)}
-.member.open .more{grid-template-rows:1fr}
+   page grid: the person's video portrait in the first column, right under the role (--gut below it:
+   the details are pulled up by --lift, the row's height below the role), the specialisations large
+   beside it with the credentials and languages under them, the email on the right and bottom margins.
+   The specialisations are pulled up so their cap height meets the portrait's top (Helvetica Neue: .281em below the line top
+   at line-height 1.25). The details pass under the name, so they let clicks through to the row. */
+.member{--nm:clamp(28px, 2.78vw, 48px);--lift:calc(30px + var(--nm) * .8 - var(--step-0) * 1.45)}
+.more{display:grid;grid-template-rows:0fr;pointer-events:none;transition:grid-template-rows .5s cubic-bezier(.215,.61,.355,1),margin-top .5s cubic-bezier(.215,.61,.355,1)}
+.member.open .more{grid-template-rows:1fr;margin-top:calc(var(--lift) * -1)}
+.more .grid > *{pointer-events:auto}
 .more-in{min-height:0;overflow:hidden}
-.more .grid{row-gap:var(--gut);align-items:first baseline;padding-top:var(--gap);padding-bottom:var(--foot);opacity:0;transition:opacity .25s ease}
+.more .grid{row-gap:var(--gut);padding-top:var(--gut);padding-bottom:var(--foot);opacity:0;transition:opacity .25s ease}
 .member.open .more .grid{opacity:1;transition:opacity .4s ease .12s}
-.portrait{grid-column:1;align-self:start;margin-top:calc(var(--step-1) * .281);display:block;width:100%;height:auto;aspect-ratio:7 / 8;object-fit:cover;background:var(--ink)}
-.spec{grid-column:2 / span 2;font-size:var(--step-1);line-height:1.25;letter-spacing:-.01em;text-wrap:pretty}
-.facts{grid-column:4;display:flex;flex-direction:column;gap:.6em;color:var(--on-accent-mute)}
+.portrait{grid-column:1;align-self:start;display:block;width:100%;height:auto;aspect-ratio:7 / 8;object-fit:cover;background:var(--ink)}
+.txt{grid-column:2 / span 2;display:flex;flex-direction:column;gap:var(--gut)}
+.spec{margin-top:-.281em;font-size:var(--step-1);line-height:1.25;letter-spacing:-.01em;text-wrap:pretty}
+.facts{display:flex;flex-direction:column;gap:.6em;color:var(--on-accent-mute)}
 .mail{grid-column:5;justify-self:end;align-self:end;font-size:var(--step-1);line-height:1.25;letter-spacing:-.01em;transition:color .2s}
 .mail:hover{color:#fff}
 .mail:focus-visible{outline:1px solid var(--on-ink);outline-offset:4px}
 .member ::selection{background:var(--on-ink);color:var(--accent)}
-@media (max-width:1279px) and (min-width:761px){
-  .spec{grid-column:2 / span 2}
-  .facts{grid-column:4 / span 2}
-  .mail{grid-column:4 / span 2;grid-row:2;justify-self:start}
-}
 
 /* ---------- the blur under the top bar ---------- */
 /* Like the bar over Instagram's comments: four stacked blurs, each a little stronger and reaching a
@@ -232,7 +234,7 @@ main{position:relative;z-index:1}
 /* ---------- phones: narrower margins, the menu in two columns on the right ---------- */
 @media (max-width:760px){
   :root{--gut:max(16px, env(safe-area-inset-left, 0px));--gut-r:max(16px, env(safe-area-inset-right, 0px));--hero-min:560px}
-  header.grid{grid-template-columns:1fr auto}
+  header.grid,.mono.grid{grid-template-columns:1fr auto}
   /* Three links and three languages beside the big logo: two columns of three lines each. */
   .menu{grid-column:2;gap:14px}
   .menu div{flex-direction:column;align-items:flex-end;gap:0}
@@ -242,8 +244,10 @@ main{position:relative;z-index:1}
   /* The role above the name, both on the left: the names are too long for one line beside it. */
   .row{flex-direction:column;align-items:flex-start;gap:4px;padding-block:14px 12px}
   .row .nm{padding-block:0;white-space:normal}
-  .portrait{grid-column:1 / span 3;margin-top:0}
-  .spec,.facts,.mail{grid-column:1 / -1;justify-self:start}
+  .portrait{grid-column:1 / span 3}
+  .spec{margin-top:0}
+  .member.open .more{margin-top:0}
+  .txt,.mail{grid-column:1 / -1;justify-self:start}
 }
 @media (prefers-reduced-motion:reduce){
   html{scroll-behavior:auto}

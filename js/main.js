@@ -12,6 +12,16 @@
   const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)');
   let lang = 'et';
 
+  /* The header inverts against the page (mix-blend-mode: difference), which over the burgundy turns
+     it blue-green. A copy of it on top, in gray with mix-blend-mode: saturation, takes the colour
+     back out exactly where its letters are, so the logo and menu stay black, white and gray. */
+  const mono = document.createElement('div');
+  mono.className = 'grid small mono';
+  mono.setAttribute('aria-hidden', 'true');
+  mono.inert = true;
+  mono.append(...[...$('header').children].map(n => n.cloneNode(true)));
+  $('header').after(mono);
+
   /* ---------- texts ---------- */
 
   const isTodo = v => typeof v === 'string' ? v.startsWith('TODO') : Array.isArray(v) && v.some(isTodo);
