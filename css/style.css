@@ -209,12 +209,14 @@ main{position:relative;z-index:1}
 .member.open .more{grid-template-rows:1fr;margin-top:calc(var(--lift) * -1)}
 .more .grid > *{pointer-events:auto}
 .more-in{min-height:0;overflow:hidden;container-type:inline-size}
-.more .grid{--col:calc((100cqw - var(--gut) - var(--gut-r) - 4 * var(--gap)) / 5);display:flex;align-items:flex-start;gap:var(--gut);padding-top:var(--gut);padding-left:calc(var(--gut) + var(--role, 0px) + var(--gut));padding-bottom:var(--foot);opacity:0;transition:opacity .25s ease}
+.more .grid{--col:calc((100cqw - var(--gut) - var(--gut-r) - 4 * var(--gap)) / 5);display:flex;align-items:flex-start;gap:var(--gut);padding-top:var(--gut);padding-left:calc(var(--gut) + var(--role, 0px) + var(--gut));padding-bottom:var(--gut);opacity:0;transition:opacity .25s ease}
 .member.open .more .grid{opacity:1;transition:opacity .4s ease .12s}
 .portrait{flex:0 0 var(--col);display:block;width:var(--col);height:auto;aspect-ratio:7 / 8;object-fit:cover;background:var(--ink)}
-.txt{flex:0 1 calc(var(--col) * 2 + var(--gap));display:flex;flex-direction:column;gap:var(--gut)}
+.txt{flex:0 1 calc(var(--col) * 2 + var(--gap));align-self:stretch;display:flex;flex-direction:column;gap:var(--gut)}
+/* The languages: a label and, a line lower, the list, on the bottom of the block (the portrait's bottom, the email's line). */
+.langs{margin-top:auto;color:var(--on-accent-mute)}
 .spec{margin-top:-.281em;font-size:var(--step-1);line-height:1.25;letter-spacing:-.01em;text-wrap:pretty}
-.facts{display:flex;flex-direction:column;gap:.6em;color:var(--on-accent-mute)}
+.facts{color:var(--on-accent-mute)}
 .mail{margin-left:auto;align-self:flex-end;font-size:var(--step-1);line-height:1.25;letter-spacing:-.01em;transition:color .2s}
 .mail:hover{color:#fff}
 .mail:focus-visible{outline:1px solid var(--on-ink);outline-offset:4px}
@@ -249,7 +251,7 @@ main{position:relative;z-index:1}
   .more .grid{display:grid;row-gap:var(--gut);padding-top:var(--gut);padding-left:var(--gut)}
   .portrait{grid-column:1 / span 3;width:100%}
   .spec{margin-top:0}
-  .member.open .more{margin-top:0}
+  .member{--lift:calc(12px - var(--nm) * .06)} /* the row's height under the name's baseline, on phones */
   .txt,.mail{grid-column:1 / -1;justify-self:start;margin-left:0}
 }
 @media (prefers-reduced-motion:reduce){

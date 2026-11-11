@@ -26,6 +26,7 @@ window.LEGALIA_I18N = {
       address: ['Lootsi tn 8,', '10151 Tallinn'],
       map: 'Leia meid kaardilt'
     },
+    details: { langs: 'Keeled:' },
     team: {
       aivar: {
         name: 'Aivar Pihlak', title: 'Advokaat',
@@ -81,6 +82,7 @@ window.LEGALIA_I18N = {
     },
     experience: { label: 'Experience', text: 'Every year since 1992 has added to our experience. Over three decades, we have guided clients through matters in both private and public law.' },
     contact: { label: 'Contact', address: ['Lootsi tn 8,', '10151 Tallinn'], map: 'Find us on the map' }, // map: own translation
+    details: { langs: 'Languages:' },
     team: {
       aivar: {
         name: 'Aivar Pihlak', title: 'Attorney',
@@ -133,6 +135,7 @@ window.LEGALIA_I18N = {
     },
     experience: { label: 'Опыт', text: 'Каждый год с 1992 года пополнял наш опыт. За более чем три десятилетия мы сопровождали клиентов в делах как частного, так и публичного права.' }, // own translation
     contact: { label: 'Контакты', address: ['Lootsi tn 8,', '10151 Tallinn'], map: 'Найти нас на карте' }, // map: own translation
+    details: { langs: 'Языки:' },
     team: {
       aivar: {
         name: 'Айвар Пихлак', title: 'Адвокат',
