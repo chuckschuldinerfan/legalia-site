@@ -51,6 +51,7 @@
     $$('[data-i18n-label]').forEach(el => el.setAttribute('aria-label', text(el.dataset.i18nLabel).value));
     renderTraits();
     labelTeam();
+    measureRoles();
     typer.prepare();
     fitAll();
     $$('[data-lang]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.lang === lang)));
@@ -114,6 +115,10 @@
   const labelTeam = () => $$('.member', rows).forEach(li => { const el = $('.scr', li); cancelAnimationFrame(el.scrambling); el.textContent = wordFor(li); });
 
   // The portrait loads the first time its row opens, plays while it is open and stops when it closes.
+  // The details start right after the role: its width, measured.
+  const measureRoles = () => $$('.member', rows).forEach(li => li.style.setProperty('--role', `${$('.role', li).offsetWidth}px`));
+  addEventListener('resize', measureRoles);
+  document.fonts?.ready.then(measureRoles);
   function setOpen(li, on) {
     li.classList.toggle('open', on);
     $('.row', li).setAttribute('aria-expanded', String(on));

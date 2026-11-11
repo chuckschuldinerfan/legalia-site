@@ -196,24 +196,27 @@ main{position:relative;z-index:1}
   .member:hover::before{transform:none}
   .member:hover .role{color:var(--on-accent-mute)}
 }
-/* The details open downwards (a grid row growing from 0 to its content's height). They sit on the
-   page grid: the person's video portrait in the first column, right under the role (--gut below it:
-   the details are pulled up by --lift, the row's height below the role), the specialisations large
-   beside it with the credentials and languages under them, the email on the right and bottom margins.
-   The specialisations are pulled up so their cap height meets the portrait's top (Helvetica Neue: .281em below the line top
-   at line-height 1.25). The details pass under the name, so they let clicks through to the row. */
-.member{--nm:clamp(28px, 2.78vw, 48px);--lift:calc(30px + var(--nm) * .8 - var(--step-0) * 1.45)}
+/* The details open downwards (a grid row growing from 0 to its content's height). The person's video
+   portrait (one column wide) starts right after the role, --gap to its right, its top on the role's cap
+   height (the details are pulled up by --lift into the row, beside the name; main.js measures the role
+   into --role). Beside the portrait the specialisations large (two columns wide), the credentials and
+   languages under them; the email on the right and bottom margins. The specialisations are pulled up
+   so their cap height meets the portrait's top (Helvetica Neue caps start .281em below the line top at
+   line-height 1.25, .379em at 1.45). The details pass under the name, so they let clicks through. */
+.member{--nm:clamp(28px, 2.78vw, 48px);--lift:calc(30px + var(--nm) * .8 - var(--step-0) * .379)}
 .more{display:grid;grid-template-rows:0fr;pointer-events:none;transition:grid-template-rows .5s cubic-bezier(.215,.61,.355,1),margin-top .5s cubic-bezier(.215,.61,.355,1)}
 .member.open .more{grid-template-rows:1fr;margin-top:calc(var(--lift) * -1)}
 .more .grid > *{pointer-events:auto}
-.more-in{min-height:0;overflow:hidden}
-.more .grid{row-gap:var(--gut);padding-top:var(--gut);padding-bottom:var(--foot);opacity:0;transition:opacity .25s ease}
+.more-in{min-height:0;overflow:hidden;container-type:inline-size}
+.more .grid{--col:calc((100cqw - var(--gut) - var(--gut-r) - 4 * var(--gap)) / 5);display:flex;align-items:flex-start;gap:var(--gap);padding-left:calc(var(--gut) + var(--role, 0px) + var(--gap));padding-bottom:var(--foot);opacity:0;transition:opacity .25s ease}
 .member.open .more .grid{opacity:1;transition:opacity .4s ease .12s}
-.portrait{grid-column:1;align-self:start;display:block;width:100%;height:auto;aspect-ratio:7 / 8;object-fit:cover;background:var(--ink)}
-.txt{grid-column:2 / span 2;display:flex;flex-direction:column;gap:var(--gut)}
+.portrait{flex:0 0 var(--col);display:block;width:var(--col);height:auto;aspect-ratio:7 / 8;object-fit:cover;background:var(--ink)}
+.txt{flex:0 1 calc(var(--col) * 2 + var(--gap));display:flex;flex-direction:column;gap:var(--gut)}
 .spec{margin-top:-.281em;font-size:var(--step-1);line-height:1.25;letter-spacing:-.01em;text-wrap:pretty}
 .facts{display:flex;flex-direction:column;gap:.6em;color:var(--on-accent-mute)}
-.mail{grid-column:5;justify-self:end;align-self:end;font-size:var(--step-1);line-height:1.25;letter-spacing:-.01em;transition:color .2s}
+.mail{margin-left:auto;align-self:flex-end;font-size:var(--step-1);line-height:1.25;letter-spacing:-.01em;transition:color .2s}
+/* Small tablets: the names take up more of the row, so the texts are a column and a half wide and stay clear of them. */
+@media (max-width:1023px){ .txt{flex-basis:calc(var(--col) * 1.5)} }
 .mail:hover{color:#fff}
 .mail:focus-visible{outline:1px solid var(--on-ink);outline-offset:4px}
 .member ::selection{background:var(--on-ink);color:var(--accent)}
@@ -244,10 +247,11 @@ main{position:relative;z-index:1}
   /* The role above the name, both on the left: the names are too long for one line beside it. */
   .row{flex-direction:column;align-items:flex-start;gap:4px;padding-block:14px 12px}
   .row .nm{padding-block:0;white-space:normal}
-  .portrait{grid-column:1 / span 3}
+  .more .grid{display:grid;row-gap:var(--gut);padding-top:var(--gut);padding-left:var(--gut)}
+  .portrait{grid-column:1 / span 3;width:100%}
   .spec{margin-top:0}
   .member.open .more{margin-top:0}
-  .txt,.mail{grid-column:1 / -1;justify-self:start}
+  .txt,.mail{grid-column:1 / -1;justify-self:start;margin-left:0}
 }
 @media (prefers-reduced-motion:reduce){
   html{scroll-behavior:auto}
