@@ -158,7 +158,11 @@ main{position:relative;z-index:1}
 .reach a{width:max-content;max-width:100%;overflow-wrap:anywhere;user-select:all;-webkit-user-select:all;transition:color .2s}
 .reach a:hover{color:#fff}
 .reach a:focus-visible{outline:1px solid var(--on-ink);outline-offset:4px}
-.place{grid-column:4 / span 2;justify-self:end;display:flex;flex-direction:column;align-items:flex-start;gap:.5em}
+/* The map small on the left of the address and "find us", its bottom on their line. */
+.place{grid-column:3 / span 3;justify-self:end;display:flex;align-items:flex-end;gap:var(--gut)}
+.where{display:flex;flex-direction:column;align-items:flex-start;gap:.5em}
+.map{display:block;flex:none;width:clamp(120px, 11vw, 190px)}
+.map img{display:block;width:100%;height:auto}
 .addr{font-size:var(--step-0);line-height:1.4;color:var(--on-ink)}
 .find{display:inline-flex;align-items:center;gap:.4em;font-size:var(--step-1);line-height:1;letter-spacing:-.01em;color:#fff}
 /* Icons are SVG files in assets/icons (never text symbols, which iOS can turn into emoji). */
