@@ -204,20 +204,24 @@ main{position:relative;z-index:1}
    them; the email on the right and bottom margins. The specialisations are pulled up so their cap
    height meets the portrait's top (Helvetica Neue caps start .281em below the line top at line-height
    1.25). The details let clicks through to the row. */
-.member{--nm:clamp(28px, 2.78vw, 48px);--lift:calc(20px - var(--nm) * .05)}
+.member{--nm:clamp(28px, 2.78vw, 48px);--lift:calc(20px - var(--nm) * .05);--pic-top:calc(40px + var(--nm) * .8 - var(--lift) + var(--gut))}
+/* --pic-top: from the top line to the portrait (the row, less --lift, plus --gut); the same space is kept under the portrait. */
 .more{display:grid;grid-template-rows:0fr;pointer-events:none;transition:grid-template-rows .5s cubic-bezier(.215,.61,.355,1),margin-top .5s cubic-bezier(.215,.61,.355,1)}
 .member.open .more{grid-template-rows:1fr;margin-top:calc(var(--lift) * -1)}
 .more .grid > *{pointer-events:auto}
 .more-in{min-height:0;overflow:hidden;container-type:inline-size}
-.more .grid{--col:calc((100cqw - var(--gut) - var(--gut-r) - 4 * var(--gap)) / 5);display:flex;align-items:flex-start;gap:var(--gut);padding-top:var(--gut);padding-left:calc(var(--gut) + var(--role, 0px) + var(--gut));padding-bottom:var(--gut);opacity:0;transition:opacity .25s ease}
+.more .grid{--col:calc((100cqw - var(--gut) - var(--gut-r) - 4 * var(--gap)) / 5);display:flex;align-items:flex-start;gap:var(--gut);padding-top:var(--gut);padding-left:calc(var(--gut) + var(--role, 0px) + var(--gut));padding-bottom:var(--pic-top);position:relative;opacity:0;transition:opacity .25s ease}
 .member.open .more .grid{opacity:1;transition:opacity .4s ease .12s}
 .portrait{flex:0 0 var(--col);display:block;width:var(--col);height:auto;aspect-ratio:7 / 8;object-fit:cover;background:var(--ink)}
 .txt{flex:0 1 calc(var(--col) * 2 + var(--gap));align-self:stretch;display:flex;flex-direction:column;gap:var(--gut)}
 /* The languages: a label and, a line lower, the list, on the bottom of the block (the portrait's bottom, the email's line). */
 .langs{margin-top:auto;color:var(--on-accent-mute)}
-.spec{margin-top:-.281em;font-size:var(--step-1);line-height:1.25;letter-spacing:-.01em;text-wrap:pretty}
+/* The person's name over their specialisations, its cap height on the portrait's top. */
+.who{margin:-.281em 0 var(--gap);font-size:var(--step-1);line-height:1.25;letter-spacing:-.01em}
+.spec{font-size:var(--step-1);line-height:1.25;letter-spacing:-.01em;text-wrap:pretty}
 .facts{color:var(--on-accent-mute)}
-.mail{margin-left:auto;align-self:flex-end;font-size:var(--step-1);line-height:1.25;letter-spacing:-.01em;transition:color .2s}
+/* The email mirrors the big name: its baseline as far above the bottom line as the name's cap height is below the top line. */
+.mail{position:absolute;right:var(--gut-r);bottom:calc(18.8px + var(--nm) * .1535 - var(--step-1) * .255);font-size:var(--step-1);line-height:1.25;letter-spacing:-.01em;transition:color .2s}
 .mail:hover{color:#fff}
 .mail:focus-visible{outline:1px solid var(--on-ink);outline-offset:4px}
 .member ::selection{background:var(--on-ink);color:var(--accent)}
@@ -250,7 +254,9 @@ main{position:relative;z-index:1}
   .row .nm{padding-block:0;white-space:normal}
   .more .grid{display:grid;row-gap:var(--gut);padding-top:var(--gut);padding-left:var(--gut)}
   .portrait{grid-column:1 / span 3;width:100%}
-  .spec{margin-top:0}
+  .who{margin-top:0}
+  .more .grid{padding-bottom:var(--gut)}
+  .mail{position:static}
   .member{--lift:calc(12px - var(--nm) * .06)} /* the row's height under the name's baseline, on phones */
   .txt,.mail{grid-column:1 / -1;justify-self:start;margin-left:0}
 }
