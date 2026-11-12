@@ -196,6 +196,10 @@ main{position:relative;z-index:1}
 .role{align-self:flex-start;color:var(--on-ink-mute);transition:color .3s cubic-bezier(.215,.61,.355,1)}
 .member.open .role,.row:focus-visible .role{color:var(--on-accent-mute)}
 .row .nm{padding-block:10px;margin-bottom:-.2em;font-size:var(--nm);line-height:1;text-transform:uppercase;white-space:nowrap}
+/* The name and "Kontakt" swap in place (main.js): the leaving word lies over the arriving one. */
+.scr{position:relative;display:inline-block}
+.scr .w{display:inline-block}
+.scr .w.out{position:absolute;top:0;right:0;pointer-events:none}
 @media (hover:hover){
   .member:hover::before{transform:none}
   .member:hover .role{color:var(--on-accent-mute)}
@@ -256,6 +260,7 @@ main{position:relative;z-index:1}
   /* The role above the name, both on the left: the names are too long for one line beside it. */
   .row{flex-direction:column;align-items:flex-start;gap:4px;padding-block:14px 12px}
   .row .nm{padding-block:0;white-space:normal}
+  .scr .w.out{right:auto;left:0}
   .more .grid{display:grid;row-gap:var(--gut);padding-top:var(--gut);padding-left:var(--gut)}
   .portrait{grid-column:1 / span 3;width:100%}
   .who{margin-top:0}

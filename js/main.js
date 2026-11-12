@@ -59,8 +59,8 @@
   }
 
   /* ---------- the team: a list of names; pressing one opens its details under it ---------- */
-  /* After the k72.ca/en/about list: pointing at a row fills it with the accent and the name decodes
-     into "Kontakt", letter by letter out of random characters (and back when the pointer leaves).
+  /* After the k72.ca/en/about list: pointing at a row fills it with the accent and the name gives
+     way to "Kontakt": it drifts up and fades as the word rises in (and back when the pointer leaves).
      Pressing the row opens it downwards with the person's details; one row is open at a time. */
   const rows = $('#roster .rows');
   TEAM.forEach(id => {
@@ -76,43 +76,35 @@
     rows.append(li);
   });
 
-  // The decode: every letter flickers through random characters and settles on its own, a little
-  // later than the one before it; the word grows or shrinks to the new length on the way.
-  const GLYPHS = { et: 'ABDEFGHIJKLMNOPRSTUVÕÄÖÜ', en: 'ABCDEFGHIJKLMNOPRSTUVWXYZ', ru: 'АБВГДЕЖЗИКЛМНОПРСТУФХЦЧШЭЮЯ' }; // letters only
-  function scramble(el, to) {
-    cancelAnimationFrame(el.scrambling);
-    const from = el.textContent;
-    if (from === to) return;
-    if (reduceMotion.matches || !from) { el.textContent = to; return; }
-    const settle = [...to].map((_, i) => 40 + i * 16 + Math.random() * 50); // ms after the start: about 0.3s in all
-    const end = Math.max(...settle), t0 = performance.now();
-    const glyphs = GLYPHS[lang];
-    let last = 0;
-    const step = now => {
-      const t = now - t0;
-      if (now - last > 40 || t >= end) { // a new random letter about 25 times a second: calm, not frantic
-        last = now;
-        const len = Math.round(from.length + (to.length - from.length) * Math.min(1, t / end));
-        let out = '';
-        for (let i = 0; i < len; i++) out += i < to.length && t >= settle[i] ? to[i] : glyphs[Math.random() * glyphs.length | 0];
-        el.textContent = out;
-      }
-      if (t < end) el.scrambling = requestAnimationFrame(step); else el.textContent = to;
-    };
-    el.scrambling = requestAnimationFrame(step);
+  // The swap: the word drifts up a little and fades out while the new one rises into its place from
+  // just below, fading in (about 0.4s). Quiet on purpose (the client found the decode too loud).
+  const EASE = 'cubic-bezier(.215,.61,.355,1)';
+  const word = t => Object.assign(document.createElement('span'), { className: 'w', textContent: t });
+  function swap(el, to) {
+    if (el.dataset.to === to) return;
+    el.dataset.to = to;
+    $$('.w.out', el).forEach(n => n.remove());
+    const cur = $('.w', el);
+    if (reduceMotion.matches || !cur) { el.replaceChildren(word(to)); return; }
+    cur.classList.add('out');
+    cur.animate([{ transform: 'none', opacity: 1 }, { transform: 'translateY(-.25em)', opacity: 0 }], { duration: 260, easing: EASE, fill: 'forwards' })
+      .finished.then(() => cur.remove(), () => {});
+    const next = word(to);
+    el.append(next);
+    next.animate([{ transform: 'translateY(.25em)', opacity: 0 }, { transform: 'none', opacity: 1 }], { duration: 380, delay: 80, easing: EASE, fill: 'backwards' });
   }
   const hoverable = matchMedia('(hover: hover)');
   const nameOf = li => text(`team.${li.dataset.id}.name`).value;
   // "Kontakt" while the pointer is on the row (or the keyboard is on it), the name otherwise.
   const shown = li => (hoverable.matches && li.matches(':hover')) || $('.row', li).matches(':focus-visible');
   const wordFor = li => (shown(li) ? text('nav.contact').value : nameOf(li));
-  const label = li => scramble($('.scr', li), wordFor(li));
+  const label = li => swap($('.scr', li), wordFor(li));
   rows.addEventListener('pointerover', e => { const li = e.target.closest('.member'); if (li && e.pointerType === 'mouse') label(li); });
   rows.addEventListener('pointerout', e => { const li = e.target.closest('.member'); if (li && !li.contains(e.relatedTarget)) requestAnimationFrame(() => label(li)); });
   rows.addEventListener('focusin', e => { const li = e.target.closest('.member'); if (li) label(li); });
   rows.addEventListener('focusout', e => { const li = e.target.closest('.member'); if (li) requestAnimationFrame(() => label(li)); });
   // After a language change: the words in the new language at once, without the animation.
-  const labelTeam = () => $$('.member', rows).forEach(li => { const el = $('.scr', li); cancelAnimationFrame(el.scrambling); el.textContent = wordFor(li); });
+  const labelTeam = () => $$('.member', rows).forEach(li => { const el = $('.scr', li), to = wordFor(li); el.dataset.to = to; el.replaceChildren(word(to)); });
 
   // The portrait loads the first time its row opens, plays while it is open and stops when it closes.
   // The details start right after the role: its width, measured.
