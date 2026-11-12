@@ -196,13 +196,17 @@ main{position:relative;z-index:1}
 .role{align-self:flex-start;color:var(--on-ink-mute);transition:color .3s cubic-bezier(.215,.61,.355,1)}
 .member.open .role,.row:focus-visible .role{color:var(--on-accent-mute)}
 .row .nm{padding-block:10px;margin-bottom:-.2em;font-size:var(--nm);line-height:1;text-transform:uppercase;white-space:nowrap}
-/* The name and "Kontakt" swap in place (main.js): the leaving word lies over the arriving one. */
-.scr{position:relative;display:inline-block}
-.scr .w{display:inline-block}
-.scr .w.out{position:absolute;top:0;right:0;pointer-events:none}
+/* The name and "Kontakt" stacked in a window one line tall (main.js); hover or keyboard focus rolls the
+   pair up a line, in step with the fill. The window is 1.2em tall so accents are not cut, with -.1em
+   margins so the row keeps its height and the name its baseline; clip-path (not overflow) keeps the baseline. */
+.scr{display:inline-block;height:1.2em;margin-block:-.1em;clip-path:inset(0);vertical-align:top}
+.track{display:block;text-align:right;transition:transform .45s cubic-bezier(.215,.61,.355,1)}
+.track .w{display:block;height:1.2em;line-height:1.2em}
+.row:focus-visible .track{transform:translateY(-50%)}
 @media (hover:hover){
   .member:hover::before{transform:none}
   .member:hover .role{color:var(--on-accent-mute)}
+  .member:hover .track{transform:translateY(-50%)}
 }
 /* The details open downwards (a grid row growing from 0 to its content's height). The person's video
    portrait (one column wide) sits below the role and the name and right after the role, the same gap
@@ -260,7 +264,11 @@ main{position:relative;z-index:1}
   /* The role above the name, both on the left: the names are too long for one line beside it. */
   .row{flex-direction:column;align-items:flex-start;gap:4px;padding-block:14px 12px}
   .row .nm{padding-block:0;white-space:normal}
-  .scr .w.out{right:auto;left:0}
+  /* Names may wrap here and there is no hover: just the name, no window. */
+  .scr{height:auto;margin-block:0;clip-path:none;vertical-align:baseline}
+  .track{text-align:left}
+  .track .w{height:auto;line-height:inherit}
+  .track .w + .w{display:none}
   .more .grid{display:grid;row-gap:var(--gut);padding-top:var(--gut);padding-left:var(--gut)}
   .portrait{grid-column:1 / span 3;width:100%}
   .who{margin-top:0}
@@ -271,7 +279,7 @@ main{position:relative;z-index:1}
 }
 @media (prefers-reduced-motion:reduce){
   html{scroll-behavior:auto}
-  .find .arrow,.member::before,.role,.more,.more .grid,.mail{transition:none !important}
+  .find .arrow,.member::before,.role,.more,.more .grid,.mail,.track{transition:none !important}
 }
 
 /* ---------- opening ---------- */

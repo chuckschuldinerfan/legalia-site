@@ -59,8 +59,8 @@
   }
 
   /* ---------- the team: a list of names; pressing one opens its details under it ---------- */
-  /* After the k72.ca/en/about list: pointing at a row fills it with the accent and the name gives
-     way to "Kontakt": it drifts up and fades as the word rises in (and back when the pointer leaves).
+  /* After the k72.ca/en/about list: pointing at a row fills it with the accent and the name rolls up
+     out of sight as "Kontakt" rolls in under it (and back when the pointer leaves).
      Pressing the row opens it downwards with the person's details; one row is open at a time. */
   const rows = $('#roster .rows');
   TEAM.forEach(id => {
@@ -76,35 +76,15 @@
     rows.append(li);
   });
 
-  // The swap: the word drifts up a little and fades out while the new one rises into its place from
-  // just below, fading in (about 0.4s). Quiet on purpose (the client found the decode too loud).
-  const EASE = 'cubic-bezier(.215,.61,.355,1)';
-  const word = t => Object.assign(document.createElement('span'), { className: 'w', textContent: t });
-  function swap(el, to) {
-    if (el.dataset.to === to) return;
-    el.dataset.to = to;
-    $$('.w.out', el).forEach(n => n.remove());
-    const cur = $('.w', el);
-    if (reduceMotion.matches || !cur) { el.replaceChildren(word(to)); return; }
-    cur.classList.add('out');
-    cur.animate([{ transform: 'none', opacity: 1 }, { transform: 'translateY(-.25em)', opacity: 0 }], { duration: 260, easing: EASE, fill: 'forwards' })
-      .finished.then(() => cur.remove(), () => {});
-    const next = word(to);
-    el.append(next);
-    next.animate([{ transform: 'translateY(.25em)', opacity: 0 }, { transform: 'none', opacity: 1 }], { duration: 380, delay: 80, easing: EASE, fill: 'backwards' });
-  }
-  const hoverable = matchMedia('(hover: hover)');
+  // The name and "Kontakt" sit one above the other in a window one line tall; on hover (or keyboard
+  // focus) the pair rolls up a line, all in CSS, so a quick pass reverses smoothly from wherever it is.
+  const line = t => Object.assign(document.createElement('span'), { className: 'w', textContent: t });
   const nameOf = li => text(`team.${li.dataset.id}.name`).value;
-  // "Kontakt" while the pointer is on the row (or the keyboard is on it), the name otherwise.
-  const shown = li => (hoverable.matches && li.matches(':hover')) || $('.row', li).matches(':focus-visible');
-  const wordFor = li => (shown(li) ? text('nav.contact').value : nameOf(li));
-  const label = li => swap($('.scr', li), wordFor(li));
-  rows.addEventListener('pointerover', e => { const li = e.target.closest('.member'); if (li && e.pointerType === 'mouse') label(li); });
-  rows.addEventListener('pointerout', e => { const li = e.target.closest('.member'); if (li && !li.contains(e.relatedTarget)) requestAnimationFrame(() => label(li)); });
-  rows.addEventListener('focusin', e => { const li = e.target.closest('.member'); if (li) label(li); });
-  rows.addEventListener('focusout', e => { const li = e.target.closest('.member'); if (li) requestAnimationFrame(() => label(li)); });
-  // After a language change: the words in the new language at once, without the animation.
-  const labelTeam = () => $$('.member', rows).forEach(li => { const el = $('.scr', li), to = wordFor(li); el.dataset.to = to; el.replaceChildren(word(to)); });
+  const labelTeam = () => $$('.member', rows).forEach(li => {
+    const track = Object.assign(document.createElement('span'), { className: 'track' });
+    track.append(line(nameOf(li)), line(text('nav.contact').value));
+    $('.scr', li).replaceChildren(track);
+  });
 
   // The portrait loads the first time its row opens, plays while it is open and stops when it closes.
   // The details start right after the role: its width, measured.
