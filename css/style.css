@@ -259,8 +259,9 @@ main{position:relative;z-index:1}
   .menu{grid-column:2;gap:14px}
   .menu div{flex-direction:column;align-items:flex-end;gap:0}
   .logo{height:33px}
-  .reach,.place{grid-column:1 / -1;justify-self:start}
-  /* The map above the address and "find us", the whole block on the right margin as on wide screens. */
+  /* As on wide screens: the phone and email on the left, the map (above the address and "find us")
+     on the right margin, both on the bottom line of one row. */
+  .reach,.place{grid-column:1 / -1;grid-row:2;justify-self:start}
   .place{justify-self:end;flex-direction:column;align-items:flex-start}
   :root{--head-bar:48px}
   /* The role above the name, both on the left: the names are too long for one line beside it. */
@@ -279,6 +280,8 @@ main{position:relative;z-index:1}
   .member{--lift:calc(12px - var(--nm) * .06)} /* the row's height under the name's baseline, on phones */
   .txt,.mail{grid-column:1 / -1;justify-self:start;margin-left:0}
 }
+/* Too narrow for both side by side: the map block under the contacts. */
+@media (max-width:374px){ .place{grid-row:3} }
 @media (prefers-reduced-motion:reduce){
   html{scroll-behavior:auto}
   .find .arrow,.member::before,.role,.more,.more .grid,.mail,.track{transition:none !important}
