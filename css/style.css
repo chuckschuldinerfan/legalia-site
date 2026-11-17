@@ -242,7 +242,7 @@ main{position:relative;z-index:1}
 /* Like the bar over Instagram's comments: four stacked blurs, each a little stronger and reaching a
    little less far down, so the blur is strongest at the top edge and fades out towards the bottom.
    It reaches down to where the pages' labels start. */
-.veil{position:fixed;inset:0 0 auto;z-index:49;height:var(--head);pointer-events:none}
+.veil{position:fixed;inset:0 0 auto;z-index:49;height:calc(var(--head) + env(safe-area-inset-top, 0px));pointer-events:none} /* + the status bar on iPhones, where the header sits lower */
 .veil i{position:absolute;inset:0}
 .veil i:nth-child(1){-webkit-backdrop-filter:blur(1px);backdrop-filter:blur(1px);-webkit-mask-image:linear-gradient(#000 55%, transparent);mask-image:linear-gradient(#000 55%, transparent)}
 .veil i:nth-child(2){-webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px);-webkit-mask-image:linear-gradient(#000 40%, transparent 80%);mask-image:linear-gradient(#000 40%, transparent 80%)}
@@ -260,6 +260,7 @@ main{position:relative;z-index:1}
   .menu div{flex-direction:column;align-items:flex-end;gap:0}
   .logo{height:33px}
   .reach,.place{grid-column:1 / -1;justify-self:start}
+  .place{flex-direction:column;align-items:flex-start} /* the map above the address and "find us" */
   :root{--head-bar:48px}
   /* The role above the name, both on the left: the names are too long for one line beside it. */
   .row{flex-direction:column;align-items:flex-start;gap:4px;padding-block:14px 12px}
