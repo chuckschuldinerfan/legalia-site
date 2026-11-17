@@ -57,6 +57,12 @@ window.LEGALIA_I18N = {
         spec: 'Asjaajamine ja arhiivindus, raamatupidamine',
         cred: [],
         lang: 'Eesti, vene, inglise'
+      },
+      ksenia: {
+        name: 'Ksenia Simonova', title: 'Bürooassistent',
+        spec: '',
+        cred: [],
+        lang: 'Eesti, vene, inglise'
       }
     }
   },
@@ -113,6 +119,12 @@ window.LEGALIA_I18N = {
         spec: 'Administration and archival work, accounting',
         cred: [],
         lang: 'Estonian, Russian, English'
+      },
+      ksenia: {
+        name: 'Ksenia Simonova', title: 'Office assistant',
+        spec: '',
+        cred: [],
+        lang: 'Estonian, Russian, English'
       }
     }
   },
@@ -164,6 +176,12 @@ window.LEGALIA_I18N = {
       piret: {
         name: 'Пирет Оя', title: 'Заведующая канцелярией',
         spec: 'Делопроизводство и архивоведение, бухгалтерия',
+        cred: [],
+        lang: 'Эстонский, русский, английский'
+      },
+      ksenia: {
+        name: 'Ксения Симонова', title: 'Офис-ассистент',
+        spec: '',
         cred: [],
         lang: 'Эстонский, русский, английский'
       }
