@@ -260,7 +260,8 @@ main{position:relative;z-index:1}
   .menu div{flex-direction:column;align-items:flex-end;gap:0}
   .logo{height:33px}
   .reach,.place{grid-column:1 / -1;justify-self:start}
-  .place{flex-direction:column;align-items:flex-start} /* the map above the address and "find us" */
+  /* The map above the address and "find us", the whole block on the right margin as on wide screens. */
+  .place{justify-self:end;flex-direction:column;align-items:flex-start}
   :root{--head-bar:48px}
   /* The role above the name, both on the left: the names are too long for one line beside it. */
   .row{flex-direction:column;align-items:flex-start;gap:4px;padding-block:14px 12px}
