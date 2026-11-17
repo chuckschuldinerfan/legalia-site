@@ -244,6 +244,9 @@ main{position:relative;z-index:1}
    It reaches down to where the pages' labels start. */
 .veil{position:fixed;inset:0 0 auto;z-index:49;height:calc(var(--head) + env(safe-area-inset-top, 0px));pointer-events:none} /* + the status bar on iPhones, where the header sits lower */
 .veil i{position:absolute;inset:0}
+/* Above the top edge: iOS Safari draws the page under its status bar, above where fixed elements start, so the
+   strongest blur carries on up there (about as strong as the four layers stacked at their top). */
+.veil::before{content:"";position:absolute;left:0;right:0;bottom:100%;height:120px;-webkit-backdrop-filter:blur(9px);backdrop-filter:blur(9px)}
 .veil i:nth-child(1){-webkit-backdrop-filter:blur(1px);backdrop-filter:blur(1px);-webkit-mask-image:linear-gradient(#000 55%, transparent);mask-image:linear-gradient(#000 55%, transparent)}
 .veil i:nth-child(2){-webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px);-webkit-mask-image:linear-gradient(#000 40%, transparent 80%);mask-image:linear-gradient(#000 40%, transparent 80%)}
 .veil i:nth-child(3){-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);-webkit-mask-image:linear-gradient(#000 25%, transparent 60%);mask-image:linear-gradient(#000 25%, transparent 60%)}
