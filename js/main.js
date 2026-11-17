@@ -7,6 +7,9 @@
   const LANGS = ['et', 'en', 'ru'];
   const TEAM = ['aivar', 'dragan', 'henrik', 'gert', 'piret', 'ksenia']; // list order, top to bottom
   const NO_VIDEO = new Set(['ksenia']); // a still photo only (assets/img/<id>.webp)
+  // The page's version stamp (index.html loads this file as main.js?v=…): added to the portraits too, so a
+  // republished photo or clip is fetched fresh instead of coming from the browser's cache.
+  const V = new URL(document.currentScript.src).searchParams.get('v') || '';
   const $ = (sel, root = document) => root.querySelector(sel);
   const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
 
@@ -69,7 +72,7 @@
     li.dataset.id = id;
     $$('[data-k]', li).forEach(k => {
       if (k.dataset.k === 'email') { k.textContent = `${id}@legalia.ee`; k.href = `mailto:${id}@legalia.ee`; }
-      else if (k.dataset.k === 'video') { k.poster = `assets/img/${id}.webp`; if (!NO_VIDEO.has(id)) k.dataset.src = `assets/video/${id}.mp4`; }
+      else if (k.dataset.k === 'video') { k.poster = `assets/img/${id}.webp?v=${V}`; if (!NO_VIDEO.has(id)) k.dataset.src = `assets/video/${id}.mp4?v=${V}`; }
       else k.dataset.i18n = `team.${id}.${k.dataset.k}`;
     });
     $('.more', li).id = `more-${id}`;
