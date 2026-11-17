@@ -7,7 +7,6 @@
   const LANGS = ['et', 'en', 'ru'];
   const TEAM = ['aivar', 'dragan', 'henrik', 'gert', 'piret', 'ksenia']; // list order, top to bottom
   const NO_VIDEO = new Set(['ksenia']); // a still photo only (assets/img/<id>.webp)
-  const NO_EMAIL = new Set(['ksenia']); // email not given yet: none shown
   const $ = (sel, root = document) => root.querySelector(sel);
   const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
 
@@ -69,7 +68,7 @@
     const li = $('#row-tpl').content.firstElementChild.cloneNode(true);
     li.dataset.id = id;
     $$('[data-k]', li).forEach(k => {
-      if (k.dataset.k === 'email') { if (NO_EMAIL.has(id)) k.remove(); else { k.textContent = `${id}@legalia.ee`; k.href = `mailto:${id}@legalia.ee`; } }
+      if (k.dataset.k === 'email') { k.textContent = `${id}@legalia.ee`; k.href = `mailto:${id}@legalia.ee`; }
       else if (k.dataset.k === 'video') { k.poster = `assets/img/${id}.webp`; if (!NO_VIDEO.has(id)) k.dataset.src = `assets/video/${id}.mp4`; }
       else k.dataset.i18n = `team.${id}.${k.dataset.k}`;
     });
