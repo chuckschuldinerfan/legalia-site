@@ -224,7 +224,9 @@ main{position:relative;z-index:1}
 .more-in{min-height:0;overflow:hidden;container-type:inline-size}
 .more .grid{--col:calc((100cqw - var(--gut) - var(--gut-r) - 4 * var(--gap)) / 5);display:flex;align-items:flex-start;gap:var(--gut);padding-top:var(--gut);padding-left:calc(var(--gut) + var(--role, 0px) + var(--gut));padding-bottom:var(--pic-top);position:relative;opacity:0;transition:opacity .25s ease}
 .member.open .more .grid{opacity:1;transition:opacity .4s ease .12s}
-.portrait{flex:0 0 var(--col);display:block;width:var(--col);height:auto;aspect-ratio:7 / 8;object-fit:cover;background:var(--ink)}
+/* A slight even white margin left and right of every portrait, 4% of its width (user 2026-11-17): the picture
+   keeps its 7:8 box and is cropped to the narrower space inside it, so every clip and photo gets the same gap. */
+.portrait{flex:0 0 var(--col);display:block;width:var(--col);height:auto;aspect-ratio:7 / 8;object-fit:cover;padding-inline:calc(var(--col) * .04);background:#fff}
 .txt{flex:0 1 calc(var(--col) * 2 + var(--gap));align-self:stretch;display:flex;flex-direction:column;gap:var(--gut)}
 /* The languages: a label and, a line lower, the list, on the bottom of the block (the portrait's bottom, the email's line). */
 .langs{margin-top:auto;color:var(--on-accent-mute)}
@@ -276,7 +278,7 @@ main{position:relative;z-index:1}
   .track .w{height:auto;line-height:inherit}
   .track .w + .w{display:none}
   .more .grid{display:grid;row-gap:var(--gut);padding-top:var(--gut);padding-left:var(--gut)}
-  .portrait{grid-column:1 / span 3;width:100%}
+  .portrait{grid-column:1 / span 3;width:100%;padding-inline:calc((var(--col) * 3 + var(--gap) * 2) * .04)}
   .who{margin-top:0}
   .more .grid{padding-bottom:var(--gut)}
   .mail{position:static}
